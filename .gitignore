@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+.DS_Store
+.streamlit/secrets.toml
+# Never commit real lecture transcripts (privacy, NFR3)
+transcripts/
