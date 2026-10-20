@@ -1,0 +1,31 @@
+Title: Introduction to Software Engineering - Lecture 3
+https://tilburguniversity.cloud.panopto.eu/Panopto/Pages/Viewer.aspx?id=00000000-0000-0000-0000-000000000000
+
+1
+00:00:01,000 --> 00:00:06,000
+Lecturer: Okay, good morning everyone, let's get started. Today we talk about agile development and Scrum.
+
+2
+00:00:06,500 --> 00:00:15,000
+Lecturer: In the waterfall model you finish one phase completely before moving to the next one: requirements, design, implementation, testing and maintenance. The problem is that requirements change, and in waterfall a change late in the project is very expensive.
+
+3
+00:00:15,500 --> 00:00:28,000
+Lecturer: Agile methods accept that requirements change. You work in short iterations, which Scrum calls sprints. A sprint usually lasts one to four weeks, and at the end of each sprint you should have a working increment of the product.
+
+4
+00:00:28,500 --> 00:00:40,000
+Lecturer: Scrum has three roles. The product owner manages the product backlog and decides priorities. The scrum master removes obstacles and makes sure the team follows the process. The development team does the actual work and organises itself.
+
+5
+00:00:40,500 --> 00:00:52,000
+Student: Is the scrum master the same as a project manager?
+Lecturer: No, and that's a common misunderstanding. The scrum master does not assign tasks. The team picks tasks from the sprint backlog themselves.
+
+6
+00:00:52,500 --> 00:01:05,000
+Lecturer: Every day, or in your case every two days, you hold a short stand-up meeting of about five to fifteen minutes. Each person answers three questions: what did I do, what will I do, and is anything blocking me.
+
+7
+00:01:05,500 --> 00:01:15,000
+Lecturer: For next week, please set up your project board in Trello or Jira and create your GitHub repository with at least two branches. The half page report is due at the end of week two.
