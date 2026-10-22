@@ -6,3 +6,4 @@ ALLOWED_EXTENSIONS = (".txt",)
 MAX_UPLOAD_MB = 5
 DETAIL_LEVELS = {"Short": 5, "Medium": 10, "Detailed": 15}
 DEFAULT_DETAIL_LEVEL = "Medium"
+MIN_TRANSCRIPT_WORDS = 20
