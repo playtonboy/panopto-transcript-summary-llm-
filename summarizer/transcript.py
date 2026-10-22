@@ -25,7 +25,7 @@ URL_PATTERN = re.compile(r"https?://\S*panopto\S*", re.IGNORECASE)
 
 TITLE_PATTERN = re.compile(r"^Title:\s*(.*)$", re.IGNORECASE)
 
-SPEAKER_PATTERN = re.compile(r"^([A-Za-z][\w .'-]*):\s*(.+)$")
+SPEAKER_PATTERN = re.compile(r"^([A-Z][\w.'-]*(?: [A-Z][\w.'-]*){0,2}):\s*(.+)$")
 
 class TranscriptError(Exception): #this is custom error for transcripts that fail validation (if script is too short)
     pass
