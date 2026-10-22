@@ -1,9 +1,5 @@
 import config
-
-class TranscriptError(ValueError):
-    """Error raised when an uploaded transcript is invalid."""
-    pass
-
+from summarizer.transcript import TranscriptError
 
 def validate_upload(filename: str, size_bytes: int) -> None:
     """Check whether an uploaded transcript file is valid."""
