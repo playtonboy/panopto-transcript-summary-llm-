@@ -9,3 +9,6 @@ DEFAULT_DETAIL_LEVEL = "Medium"
 REQUEST_TIMEOUT_S = 300   # how long we wait for the model (seconds)
 MAX_OUTPUT_TOKENS = 1500  # longest answer the model may give
 MIN_TRANSCRIPT_WORDS = 20
+CHARS_PER_TOKEN = 4
+CHUNK_TOKENS = 12000
+CHUNK_OVERLAP_TOKENS = 200
