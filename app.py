@@ -1,6 +1,7 @@
 import streamlit as st
 
 from summarizer.upload_validation import TranscriptError, validate_upload, decode
+from summarizer.copy_button import show_copy_button
 
 st.title("Panopto Transcript Summarizer")
 
@@ -16,6 +17,7 @@ if uploaded_file is not None:
 
         st.success("Transcript uploaded successfully!")
         st.text_area("Transcript preview", transcript_text, height=250)
+        show_copy_button(transcript_text, "Copy transcript")
 
     except TranscriptError as error:
         st.error(str(error))
