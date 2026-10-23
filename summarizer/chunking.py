@@ -29,7 +29,8 @@ def split_into_chunks(text: str) -> list[str]:
                     best = max(best, pos + len(sep))
             if best != -1:
                 end = best
-
+            if len(text) - end <= overlap_chars:
+                end = len(text)
         chunks.append(text[start:end])
         if end >= len(text):
             break
