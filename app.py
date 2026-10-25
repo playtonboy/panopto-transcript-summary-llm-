@@ -6,7 +6,7 @@ Run with:  streamlit run app.py
 import streamlit as st
 
 import config
-from summarizer import llm_client
+from summarizer import export, llm_client
 from summarizer.summarize import summarize
 from summarizer.transcript import TranscriptError, parse
 from summarizer.upload_validation import decode, validate_upload
@@ -61,4 +61,10 @@ if summary:
     st.markdown(summary.body)
     if summary.source_url:
         st.markdown(f"[Original lecture]({summary.source_url})")
-    # SCRUM-21 (copy), SCRUM-16 (disclaimer) and SCRUM-17 (downloads) go here.
+    st.download_button("Download .txt", export.to_txt(summary), file_name="summary.txt", mime="text/plain")
+    st.download_button(
+        "Download .docx",
+        export.to_docx(summary),
+        file_name="summary.docx",
+        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    )
