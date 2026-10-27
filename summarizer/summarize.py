@@ -5,7 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 
 import config
-from summarizer import llm_client
+from summarizer import llm_client, chunking
 from summarizer.transcript import Transcript
 
 SYSTEM_PROMPT = (
@@ -116,7 +116,7 @@ def summarize(
     if detail_level not in config.DETAIL_LEVELS:
         detail_level = config.DEFAULT_DETAIL_LEVEL
     bullets = min(config.DETAIL_LEVELS[detail_level], max(1, transcript.word_count // WORDS_PER_POINT))
-    chunks = [transcript.text]  # TODO: chunking.split_into_chunks(transcript.text) once SCRUM-42 is merged
+    chunks = chunking.split_into_chunks(transcript.text)
     steps = len(chunks) + 3 if len(chunks) > 1 else 3
 
     if len(chunks) == 1:
