@@ -10,6 +10,7 @@ from summarizer import export, llm_client
 from summarizer.summarize import summarize
 from summarizer.transcript import TranscriptError, parse
 from summarizer.upload_validation import decode, validate_upload
+from summarizer.copy_button import show_copy_button
 
 st.set_page_config(page_title="Lecture Summarizer")
 st.title("Panopto Lecture Summarizer")
@@ -68,3 +69,4 @@ if summary:
         file_name="summary.docx",
         mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     )
+    show_copy_button(summary.as_text(), "Copy summary")
