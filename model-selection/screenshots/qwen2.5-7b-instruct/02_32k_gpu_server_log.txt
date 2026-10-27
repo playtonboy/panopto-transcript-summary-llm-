@@ -1,0 +1,104 @@
+2026-10-22 15:37:36 [DEBUG]
+ slot update_slots: id  0 | task 0 | prompt processing progress, n_tokens = 512, batch.n_tokens = 512, progress = 0.044108
+2026-10-22 15:37:36 [DEBUG]
+ slot update_slots: id  0 | task 0 | n_tokens = 512, memory_seq_rm [512, end)
+2026-10-22 15:37:36 [DEBUG]
+ slot update_slots: id  0 | task 0 | prompt processing progress, n_tokens = 1024, batch.n_tokens = 512, progress = 0.088215
+2026-10-22 15:37:36 [DEBUG]
+ slot update_slots: id  0 | task 0 | n_tokens = 1024, memory_seq_rm [1024, end)
+slot update_slots: id  0 | task 0 | prompt processing progress, n_tokens = 1536, batch.n_tokens = 512, progress = 0.132323
+2026-10-22 15:37:37 [DEBUG]
+ slot update_slots: id  0 | task 0 | n_tokens = 1536, memory_seq_rm [1536, end)
+slot update_slots: id  0 | task 0 | prompt processing progress, n_tokens = 2048, batch.n_tokens = 512, progress = 0.176430
+2026-10-22 15:37:37 [DEBUG]
+ slot update_slots: id  0 | task 0 | n_tokens = 2048, memory_seq_rm [2048, end)
+2026-10-22 15:37:37 [DEBUG]
+ slot update_slots: id  0 | task 0 | prompt processing progress, n_tokens = 2560, batch.n_tokens = 512, progress = 0.220538
+2026-10-22 15:37:37 [DEBUG]
+ slot update_slots: id  0 | task 0 | n_tokens = 2560, memory_seq_rm [2560, end)
+slot update_slots: id  0 | task 0 | prompt processing progress, n_tokens = 3072, batch.n_tokens = 512, progress = 0.264645
+2026-10-22 15:37:37 [DEBUG]
+ slot update_slots: id  0 | task 0 | n_tokens = 3072, memory_seq_rm [3072, end)
+slot update_slots: id  0 | task 0 | prompt processing progress, n_tokens = 3584, batch.n_tokens = 512, progress = 0.308753
+2026-10-22 15:37:37 [DEBUG]
+ slot update_slots: id  0 | task 0 | n_tokens = 3584, memory_seq_rm [3584, end)
+slot update_slots: id  0 | task 0 | prompt processing progress, n_tokens = 4096, batch.n_tokens = 512, progress = 0.352860
+2026-10-22 15:37:37 [DEBUG]
+ slot update_slots: id  0 | task 0 | n_tokens = 4096, memory_seq_rm [4096, end)
+slot update_slots: id  0 | task 0 | prompt processing progress, n_tokens = 4608, batch.n_tokens = 512, progress = 0.396968
+2026-10-22 15:37:37 [DEBUG]
+ slot update_slots: id  0 | task 0 | n_tokens = 4608, memory_seq_rm [4608, end)
+slot update_slots: id  0 | task 0 | prompt processing progress, n_tokens = 5120, batch.n_tokens = 512, progress = 0.441075
+2026-10-22 15:37:37 [DEBUG]
+ slot update_slots: id  0 | task 0 | n_tokens = 5120, memory_seq_rm [5120, end)
+2026-10-22 15:37:37 [DEBUG]
+ slot update_slots: id  0 | task 0 | prompt processing progress, n_tokens = 5632, batch.n_tokens = 512, progress = 0.485183
+2026-10-22 15:37:37 [DEBUG]
+ slot update_slots: id  0 | task 0 | n_tokens = 5632, memory_seq_rm [5632, end)
+slot update_slots: id  0 | task 0 | prompt processing progress, n_tokens = 6144, batch.n_tokens = 512, progress = 0.529290
+2026-10-22 15:37:38 [DEBUG]
+ slot update_slots: id  0 | task 0 | n_tokens = 6144, memory_seq_rm [6144, end)
+slot update_slots: id  0 | task 0 | prompt processing progress, n_tokens = 6656, batch.n_tokens = 512, progress = 0.573398
+2026-10-22 15:37:38 [DEBUG]
+ slot update_slots: id  0 | task 0 | n_tokens = 6656, memory_seq_rm [6656, end)
+slot update_slots: id  0 | task 0 | prompt processing progress, n_tokens = 7168, batch.n_tokens = 512, progress = 0.617505
+2026-10-22 15:37:38 [DEBUG]
+ slot update_slots: id  0 | task 0 | n_tokens = 7168, memory_seq_rm [7168, end)
+slot update_slots: id  0 | task 0 | prompt processing progress, n_tokens = 7680, batch.n_tokens = 512, progress = 0.661613
+2026-10-22 15:37:38 [DEBUG]
+ slot update_slots: id  0 | task 0 | n_tokens = 7680, memory_seq_rm [7680, end)
+slot update_slots: id  0 | task 0 | prompt processing progress, n_tokens = 8192, batch.n_tokens = 512, progress = 0.705720
+2026-10-22 15:37:38 [DEBUG]
+ slot update_slots: id  0 | task 0 | n_tokens = 8192, memory_seq_rm [8192, end)
+slot update_slots: id  0 | task 0 | prompt processing progress, n_tokens = 8704, batch.n_tokens = 512, progress = 0.749828
+2026-10-22 15:37:38 [DEBUG]
+ slot update_slots: id  0 | task 0 | n_tokens = 8704, memory_seq_rm [8704, end)
+slot update_slots: id  0 | task 0 | prompt processing progress, n_tokens = 9216, batch.n_tokens = 512, progress = 0.793935
+2026-10-22 15:37:38 [DEBUG]
+ slot update_slots: id  0 | task 0 | n_tokens = 9216, memory_seq_rm [9216, end)
+slot update_slots: id  0 | task 0 | prompt processing progress, n_tokens = 9728, batch.n_tokens = 512, progress = 0.838043
+2026-10-22 15:37:38 [DEBUG]
+ slot update_slots: id  0 | task 0 | n_tokens = 9728, memory_seq_rm [9728, end)
+slot update_slots: id  0 | task 0 | prompt processing progress, n_tokens = 10240, batch.n_tokens = 512, progress = 0.882150
+2026-10-22 15:37:38 [DEBUG]
+ slot update_slots: id  0 | task 0 | n_tokens = 10240, memory_seq_rm [10240, end)
+slot update_slots: id  0 | task 0 | prompt processing progress, n_tokens = 10752, batch.n_tokens = 512, progress = 0.926258
+2026-10-22 15:37:39 [DEBUG]
+ slot update_slots: id  0 | task 0 | n_tokens = 10752, memory_seq_rm [10752, end)
+slot update_slots: id  0 | task 0 | prompt processing progress, n_tokens = 11264, batch.n_tokens = 512, progress = 0.970365
+2026-10-22 15:37:39 [DEBUG]
+ slot update_slots: id  0 | task 0 | n_tokens = 11264, memory_seq_rm [11264, end)
+2026-10-22 15:37:39 [DEBUG]
+ slot init_sampler: id  0 | task 0 | init sampler, took 2.04 ms, tokens: text = 11608, total = 11608
+slot update_slots: id  0 | task 0 | prompt processing done, n_tokens = 11608, batch.n_tokens = 344
+2026-10-22 15:37:44 [DEBUG]
+ slot print_timing: id  0 | task 0 | 
+prompt eval time =    2825.87 ms / 11608 tokens (    0.24 ms per token,  4107.76 tokens per second)
+       eval time =    5086.49 ms /   359 tokens (   14.17 ms per token,    70.58 tokens per second)
+      total time =    7912.36 ms / 11967 tokens
+2026-10-22 15:37:44 [DEBUG]
+ slot      release: id  0 | task 0 | stop processing: n_tokens = 11966, truncated = 0
+srv  update_slots: all slots are idle
+2026-10-22 15:37:44 [DEBUG]
+ LlamaV4: server assigned slot 0 to task 0
+2026-10-22 15:37:44 [DEBUG]
+ LlamaV4::predict slot selection: session_id=<empty> server-selected (LCP/LRU)
+2026-10-22 15:37:44 [DEBUG]
+ slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, sim_best = 0.994 (> 0.100 thold), f_keep = 1.000
+2026-10-22 15:37:44 [DEBUG]
+ slot launch_slot_: id  0 | task -1 | sampler chain: logits -> penalties -> ?dry -> ?top-n-sigma -> top-k -> ?typical -> top-p -> min-p -> ?xtc -> temp-ext -> dist 
+slot launch_slot_: id  0 | task 382 | processing task, is_child = 0
+slot update_slots: id  0 | task 382 | new prompt, n_ctx_slot = 32768, n_keep = 11608, task.n_tokens = 12036
+slot update_slots: id  0 | task 382 | n_tokens = 11966, memory_seq_rm [11966, end)
+2026-10-22 15:37:44 [DEBUG]
+ slot init_sampler: id  0 | task 382 | init sampler, took 1.28 ms, tokens: text = 12036, total = 12036
+slot update_slots: id  0 | task 382 | prompt processing done, n_tokens = 12036, batch.n_tokens = 70
+2026-10-22 15:37:44 [DEBUG]
+ slot print_timing: id  0 | task 382 | 
+prompt eval time =      40.50 ms /    70 tokens (    0.58 ms per token,  1728.44 tokens per second)
+       eval time =     118.56 ms /     9 tokens (   13.17 ms per token,    75.91 tokens per second)
+      total time =     159.05 ms /    79 tokens
+2026-10-22 15:37:44 [DEBUG]
+ slot      release: id  0 | task 382 | stop processing: n_tokens = 12044, truncated = 0
+srv  update_slots: all slots are idle
+LlamaV4: server assigned slot 0 to task 382
