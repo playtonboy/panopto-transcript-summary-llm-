@@ -4,6 +4,8 @@ import io
 
 from docx import Document
 
+import config 
+
 from summarizer.export import to_docx, to_txt
 from summarizer.summarize import Summary
 
@@ -29,3 +31,11 @@ def test_to_docx_is_a_real_word_file_with_the_right_content():
     assert "Main topics" in paragraphs
     assert "pytest basics" in paragraphs  
     assert doc.paragraphs[2].style.name == "List Bullet"
+
+def test_exports_include_the_ai_disclaimer():
+    assert config.AI_DISCLAIMER in to_txt(SUMMARY).decode("utf-8")
+
+    doc = Document(io.BytesIO(to_docx(SUMMARY)))
+    last = doc.paragraphs[-1]
+    assert last.text == config.AI_DISCLAIMER
+    assert last.runs[0].italic
