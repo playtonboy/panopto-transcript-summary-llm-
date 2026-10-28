@@ -62,6 +62,7 @@ if summary:
     st.markdown(summary.body)
     if summary.source_url:
         st.markdown(f"[Original lecture]({summary.source_url})")
+    st.caption(config.AI_DISCLAIMER)  # NFR12
     st.download_button("Download .txt", export.to_txt(summary), file_name="summary.txt", mime="text/plain")
     st.download_button(
         "Download .docx",
