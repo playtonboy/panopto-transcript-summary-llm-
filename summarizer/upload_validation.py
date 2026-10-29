@@ -29,10 +29,20 @@ def decode(data: bytes) -> str:
             "This file appears to be a PDF. Please upload a .txt transcript."
         )
 
-    for encoding in ("utf-8-sig", "utf-16"):
+    # UTF-16 files have a BOM at the beginning
+    if data.startswith((b"\xff\xfe", b"\xfe\xff")):
         try:
-            return data.decode(encoding)
+            return data.decode("utf-16")
         except UnicodeDecodeError:
-            continue
+            raise TranscriptError(
+                "Could not decode the UTF-16 transcript."
+            )
 
+    # Try UTF-8 first
+    try:
+        return data.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        pass
+
+    # Fall back to Latin-1 for older text files
     return data.decode("latin-1")

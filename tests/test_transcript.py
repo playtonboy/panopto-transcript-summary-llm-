@@ -37,3 +37,19 @@ def test_parse_reads_the_title_line():
 def test_parse_rejects_a_transcript_that_is_too_short():
     with pytest.raises(TranscriptError):
         parse("00:00:01.000 --> 00:00:02.000\nHello everyone.")
+
+def test_parse_rejects_numbers_and_symbols():
+    invalid_text = "12345 !!! @@@ 67890 ### " * 10
+
+    with pytest.raises(TranscriptError, match="valid transcript"):
+        parse(invalid_text)
+
+
+def test_parse_accepts_normal_spoken_language():
+    valid_text = (
+        "Today we are learning about software engineering "
+        "and how to build reliable systems. "
+    ) * 5
+
+    transcript = parse(valid_text)
+    assert transcript.word_count == 65

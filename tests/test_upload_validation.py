@@ -34,3 +34,12 @@ def test_decode_reads_utf8_text():
 def test_decode_rejects_a_pdf_renamed_to_txt():
     with pytest.raises(TranscriptError, match="PDF"):
         decode(b"%PDF-1.7 fake pdf content")
+
+def test_decode_reads_utf16_text():
+    text = "Hello, this is a lecture."
+    assert decode(text.encode("utf-16")) == text
+
+
+def test_decode_reads_latin1_text():
+    text = "Café, résumé, naïve."
+    assert decode(text.encode("latin-1")) == text
