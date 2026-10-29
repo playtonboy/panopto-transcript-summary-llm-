@@ -3,6 +3,8 @@
 Run with:  streamlit run app.py
 """
 
+from pathlib import Path
+
 import streamlit as st
 
 import config
@@ -34,6 +36,9 @@ detail = st.radio(
     horizontal=True,
 )
 
+# Custom title (FR17). Empty -> the uploaded file's name without .txt.
+custom_title = st.text_input("Summary title (optional)", placeholder="Leave empty to use the file name")
+
 if st.button("Generate summary", type="primary"):
     try:
         if uploaded_file is not None:
@@ -51,17 +56,21 @@ if st.button("Generate summary", type="primary"):
             detail_level=detail,
             on_progress=lambda message, fraction: progress.progress(fraction, text=message),
         )
+        # Pasted text has no file name, so it keeps the title from the transcript (or "Lecture summary").
+        st.session_state.default_title = (
+            Path(uploaded_file.name).stem if uploaded_file is not None else st.session_state.summary.title
+        )
     except (TranscriptError, llm_client.LLMError) as error:
         st.error(str(error))
 
 # Result (FR6). Kept in session_state because Streamlit re-runs the script on every click.
 summary = st.session_state.get("summary")
 if summary:
+    # Applied on every rerun, so editing the title field updates the summary without generating again.
+    summary.title = custom_title.strip() or st.session_state.get("default_title", summary.title)
     st.divider()
     st.subheader(summary.title)
     st.markdown(summary.body)
-    if summary.source_url:
-        st.markdown(f"[Original lecture]({summary.source_url})")
     st.caption(config.AI_DISCLAIMER)  # NFR12
     st.download_button("Download .txt", export.to_txt(summary), file_name="summary.txt", mime="text/plain")
     st.download_button(

@@ -6,7 +6,6 @@ import config
 class Transcript:
     text: str #stores cleaned lecture script
     title: str = ""
-    url: str = "" #stores panotop link, if its available
     speakers: list[str] = field(default_factory=list) #stores a list of people speaking
 
     @property
@@ -21,8 +20,6 @@ TIMESTAMP_PATTERN = re.compile(
 
 NUMBER_PATTERN = re.compile(r"^\s*\d+\s*$")
 
-URL_PATTERN = re.compile(r"https?://\S*panopto\S*", re.IGNORECASE)
-
 TITLE_PATTERN = re.compile(r"^Title:\s*(.*)$", re.IGNORECASE)
 
 SPEAKER_PATTERN = re.compile(r"^([A-Z][\w.'-]*(?: [A-Z][\w.'-]*){0,2}):\s*(.+)$")
@@ -32,7 +29,6 @@ class TranscriptError(Exception): #this is custom error for transcripts that fai
 
 def parse(raw_text: str) -> Transcript: #returns original transcript as object
     title = "" #store information that is found
-    url = ""
     speakers = []
     cleaned_lines = [] #list to collect actual spoken words
 
@@ -53,13 +49,6 @@ def parse(raw_text: str) -> Transcript: #returns original transcript as object
         if title_match:
             title=title_match.group(1)
             continue
-
-        #find the panopto URL
-        url_match = URL_PATTERN.search(line)
-        if url_match:
-            if not url:
-                url = url_match.group()
-            continue 
 
         #find speaker names
         speaker_match = SPEAKER_PATTERN.match(line)
@@ -83,7 +72,6 @@ def parse(raw_text: str) -> Transcript: #returns original transcript as object
     transcript = Transcript(
         text=text,
         title=title,
-        url=url,
         speakers=speakers
     )
 
