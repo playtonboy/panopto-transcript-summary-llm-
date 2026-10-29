@@ -24,8 +24,6 @@ def to_docx(summary) -> bytes:
             doc.add_paragraph(text[2:], style="List Bullet")
         else:
             doc.add_paragraph(text)
-    if summary.source_url:
-        doc.add_paragraph(f"Original lecture: {summary.source_url}")
     doc.add_paragraph().add_run(config.AI_DISCLAIMER).italic = True  # NFR12
 
     buffer = io.BytesIO()

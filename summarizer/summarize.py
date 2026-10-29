@@ -70,14 +70,9 @@ BULLET_LINE = re.compile(r"^\s*[-*•]\s+(.*\S)")
 class Summary:
     title: str
     body: str
-    source_url: str
 
     def as_text(self) -> str:
-        parts = [self.title, "", self.body]
-        if self.source_url:
-            parts += ["", f"Original lecture: {self.source_url}"]
-        parts += ["", config.AI_DISCLAIMER]  # NFR12
-        return "\n".join(parts)
+        return "\n".join([self.title, "", self.body, "", config.AI_DISCLAIMER])  # NFR12
 
 
 def _list_items(text: str, pattern: re.Pattern) -> list[str]:
@@ -157,4 +152,4 @@ def summarize(
     ])
     on_progress("Done", 1.0)
 
-    return Summary(title=transcript.title or "Lecture summary", body=body, source_url=transcript.url)
+    return Summary(title=transcript.title or "Lecture summary", body=body)
