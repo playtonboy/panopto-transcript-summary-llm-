@@ -63,6 +63,12 @@ if st.button("Generate summary", type="primary"):
     except (TranscriptError, llm_client.LLMError) as error:
         st.error(str(error))
 
+    except Exception:
+        st.error(
+            "Something unexpected went wrong while processing your transcript. "
+            "Please try again or check your file."
+        )
+
 # Result (FR6). Kept in session_state because Streamlit re-runs the script on every click.
 summary = st.session_state.get("summary")
 if summary:

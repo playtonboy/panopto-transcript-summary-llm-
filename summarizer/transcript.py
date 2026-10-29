@@ -81,5 +81,14 @@ def parse(raw_text: str) -> Transcript: #returns original transcript as object
             f"Transcript too short ({transcript.word_count} words)."
         )
 
+    letters = sum(char.isalpha() for char in text)
+    meaningful_ratio = letters / len(text) if text else 0
+
+    if meaningful_ratio < 0.5:
+        raise TranscriptError(
+            "This file does not appear to contain a valid transcript. "
+            "Please upload a text file containing spoken language."
+        )
+
     return transcript
 
