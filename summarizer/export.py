@@ -4,6 +4,8 @@ import io
 
 from docx import Document
 
+import config
+
 
 def to_txt(summary) -> bytes:
     return summary.as_text().encode("utf-8")
@@ -24,6 +26,7 @@ def to_docx(summary) -> bytes:
             doc.add_paragraph(text)
     if summary.source_url:
         doc.add_paragraph(f"Original lecture: {summary.source_url}")
+    doc.add_paragraph().add_run(config.AI_DISCLAIMER).italic = True  # NFR12
 
     buffer = io.BytesIO()
     doc.save(buffer)

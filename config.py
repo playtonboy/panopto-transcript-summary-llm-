@@ -12,3 +12,9 @@ MIN_TRANSCRIPT_WORDS = 20
 CHARS_PER_TOKEN = 4
 CHUNK_TOKENS = 12000
 CHUNK_OVERLAP_TOKENS = 200
+
+# NFR12: shown under every summary and added to copy, .txt and .docx output (academic integrity).
+AI_DISCLAIMER = (
+    "AI-generated summary: created by a local language model from the lecture transcript. "
+    "It may contain mistakes or miss details, so check important points against the original lecture."
+)

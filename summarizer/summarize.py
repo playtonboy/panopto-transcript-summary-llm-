@@ -76,6 +76,7 @@ class Summary:
         parts = [self.title, "", self.body]
         if self.source_url:
             parts += ["", f"Original lecture: {self.source_url}"]
+        parts += ["", config.AI_DISCLAIMER]  # NFR12
         return "\n".join(parts)
 
 
