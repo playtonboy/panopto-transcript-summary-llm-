@@ -1,0 +1,14 @@
+name: tests                  # the name shown on the PR: "tests"
+on:                          # WHEN to run:
+  push:                      #   every time anyone pushes to any branch
+  pull_request:              #   and every time a PR is opened or updated
+jobs:
+  pytest:                    # one job, called "pytest"
+    runs-on: ubuntu-latest   # GitHub lends a fresh Linux computer
+    steps:                   # what to do on it, in order:
+      - uses: actions/checkout@v4      # 1. download our repo
+      - uses: actions/setup-python@v5  # 2. install Python 3.13
+        with:
+          python-version: "3.13"
+      - run: pip install -r requirements.txt   # 3. install streamlit, requests, python-docx, pytest
+      - run: python -m pytest -v               # 4. run all tests, same command as on your laptop
