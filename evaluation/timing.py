@@ -10,10 +10,11 @@ import config
 from summarizer.chunking import split_into_chunks
 from summarizer.summarize import summarize
 from summarizer.transcript import parse
+from summarizer.upload_validation import decode
 
 print(f"CHUNK_TOKENS={config.CHUNK_TOKENS}  CHUNK_OVERLAP_TOKENS={config.CHUNK_OVERLAP_TOKENS}")
 for path in sorted(Path("transcripts").glob("*.txt")):
-    transcript = parse(path.read_text(encoding="utf-8", errors="replace"))
+    transcript = parse(decode(path.read_bytes()))
     start = time.perf_counter()
     summarize(transcript, "Medium")
     seconds = time.perf_counter() - start
