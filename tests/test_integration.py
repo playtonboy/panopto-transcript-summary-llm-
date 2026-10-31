@@ -73,3 +73,11 @@ def test_server_error_gives_a_friendly_error(fake_server):
     assert llm_client.is_server_running() is True  # the server is up...
     with pytest.raises(llm_client.LLMError, match="returned 500"):  # ...but the model call fails
         summarize(parse(SAMPLE))
+
+def test_long_transcript_is_summarized_in_parts(fake_server, monkeypatch):
+    fake_server()
+    monkeypatch.setattr(config, "CHUNK_TOKENS", 50)          # force several parts
+    monkeypatch.setattr(config, "CHUNK_OVERLAP_TOKENS", 5)
+    steps = []
+    summarize(parse(SAMPLE * 5), on_progress=lambda message, fraction: steps.append(message))
+    assert any(message.startswith("Reading part") for message in steps)
