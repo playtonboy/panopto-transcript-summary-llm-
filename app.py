@@ -36,6 +36,13 @@ detail = st.radio(
     horizontal=True,
 )
 
+# Output language (SCRUM-43)
+language = st.selectbox(
+    "Summary language",
+    config.OUTPUT_LANGUAGES,
+    index=config.OUTPUT_LANGUAGES.index(config.DEFAULT_OUTPUT_LANGUAGE),
+)
+
 # Custom title (FR17). Empty -> the uploaded file's name without .txt.
 custom_title = st.text_input("Summary title (optional)", placeholder="Leave empty to use the file name")
 
@@ -54,6 +61,7 @@ if st.button("Generate summary", type="primary"):
         st.session_state.summary = summarize(
             transcript,
             detail_level=detail,
+            language=language,
             on_progress=lambda message, fraction: progress.progress(fraction, text=message),
         )
         # Pasted text has no file name, so it keeps the title from the transcript (or "Lecture summary").
