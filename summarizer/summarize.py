@@ -14,6 +14,11 @@ SYSTEM_PROMPT = (
     "Ignore filler speech, greetings and small talk unless it contains deadlines or tasks."
 )
 
+LANGUAGE_HINT = (
+    " Always write your answer in {language}. Keep technical and academic terms that have no common "
+    "{language} translation in their original form."
+)
+
 CHUNK_PROMPT = (
     "Below is part {index} of {total} of a lecture transcript. Write concise notes covering every "
     "important concept, definition, example and task mentioned in this part. Copy every assignment, "
@@ -83,11 +88,11 @@ def _as_bullets(items: list[str]) -> str:
     return "\n".join(f"- {item}" for item in items)
 
 
-def _summary_points(material: str, bullets: int, detail_level: str, speaker_hint: str) -> list[str]:
+def _summary_points(system: str, material: str, bullets: int, detail_level: str, speaker_hint: str) -> list[str]:
     prompt = SUMMARY_PROMPT.format(
         bullets=bullets, depth=DEPTH_HINTS.get(detail_level, ""), speaker_hint=speaker_hint, material=material
     )
-    points = _list_items(llm_client.chat(SYSTEM_PROMPT, prompt), NUMBERED_LINE)
+    points = _list_items(llm_client.chat(system, prompt), NUMBERED_LINE)
     if points and len(points) != bullets:
         how = "splitting points into more specific ones" if len(points) < bullets else "merging related points"
         retry = FIX_COUNT_PROMPT.format(
@@ -97,7 +102,7 @@ def _summary_points(material: str, bullets: int, detail_level: str, speaker_hint
             points="\n".join(f"{i}. {p}" for i, p in enumerate(points, start=1)),
             material=material,
         )
-        fixed = _list_items(llm_client.chat(SYSTEM_PROMPT, retry), NUMBERED_LINE)
+        fixed = _list_items(llm_client.chat(system, retry), NUMBERED_LINE)
         # Keep whichever attempt is closer to the requested length.
         if fixed and abs(len(fixed) - bullets) <= abs(len(points) - bullets):
             points = fixed
@@ -108,9 +113,13 @@ def summarize(
     transcript: Transcript,
     detail_level: str = config.DEFAULT_DETAIL_LEVEL,
     on_progress: Callable[[str, float], None] = lambda message, fraction: None,
+    language: str = config.DEFAULT_OUTPUT_LANGUAGE,
 ) -> Summary:
     if detail_level not in config.DETAIL_LEVELS:
         detail_level = config.DEFAULT_DETAIL_LEVEL
+    if language not in config.OUTPUT_LANGUAGES:
+        language = config.DEFAULT_OUTPUT_LANGUAGE
+    system = SYSTEM_PROMPT + LANGUAGE_HINT.format(language=language)
     bullets = min(config.DETAIL_LEVELS[detail_level], max(1, transcript.word_count // WORDS_PER_POINT))
     chunks = chunking.split_into_chunks(transcript.text)
     steps = len(chunks) + 3 if len(chunks) > 1 else 3
@@ -121,7 +130,7 @@ def summarize(
         notes = []
         for i, chunk in enumerate(chunks, start=1):
             on_progress(f"Reading part {i} of {len(chunks)}...", (i - 1) / steps)
-            notes.append(llm_client.chat(SYSTEM_PROMPT, CHUNK_PROMPT.format(index=i, total=len(chunks), chunk=chunk)))
+            notes.append(llm_client.chat(system, CHUNK_PROMPT.format(index=i, total=len(chunks), chunk=chunk)))
         material = "\n\n".join(notes)
     done = steps - 3
 
@@ -135,13 +144,13 @@ def summarize(
     )
 
     on_progress("Finding the main topics...", done / steps)
-    topics = _list_items(llm_client.chat(SYSTEM_PROMPT, TOPICS_PROMPT.format(material=material)), BULLET_LINE)
+    topics = _list_items(llm_client.chat(system, TOPICS_PROMPT.format(material=material)), BULLET_LINE)
 
     on_progress("Writing the summary...", (done + 1) / steps)
-    points = _summary_points(material, bullets, detail_level, speaker_hint)
+    points = _summary_points(system, material, bullets, detail_level, speaker_hint)
 
     on_progress("Collecting action items...", (done + 2) / steps)
-    actions = _list_items(llm_client.chat(SYSTEM_PROMPT, ACTION_ITEMS_PROMPT.format(material=material)), BULLET_LINE)
+    actions = _list_items(llm_client.chat(system, ACTION_ITEMS_PROMPT.format(material=material)), BULLET_LINE)
 
     body = "\n".join([
         "## Main topics",
