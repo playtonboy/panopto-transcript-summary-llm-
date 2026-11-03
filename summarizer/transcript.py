@@ -22,7 +22,9 @@ NUMBER_PATTERN = re.compile(r"^\s*\d+\s*$")
 
 TITLE_PATTERN = re.compile(r"^Title:\s*(.*)$", re.IGNORECASE)
 
-SPEAKER_PATTERN = re.compile(r"^([A-Z][\w.'-]*(?: (?:[A-Z][\w.'-]*|\d+)){0,2}):\s*(.+)$")
+SPEAKER_PATTERN = re.compile(
+    r"^((?:Speaker \d+)|(?:[A-Z][\w.'-]*(?: [A-Z][\w.'-]*){0,2})):\s*(.+)$"
+)
 
 class TranscriptError(Exception): #this is custom error for transcripts that fail validation (if script is too short)
     pass

@@ -71,3 +71,18 @@ def test_parse_adds_no_speaker_marks_for_a_single_lecturer():
 def test_parse_understands_panopto_numbered_speakers():
     numbered = SAMPLE.replace("Alice Smith:", "Speaker 1:").replace("Bob:", "Speaker 2:")
     assert parse(numbered).speakers == ["Speaker 1", "Speaker 2"]
+
+def test_parse_does_not_confuse_tasks_with_speakers():
+    text = (
+        "Alice: Today we are discussing software engineering and programming. "
+        "We will work through several examples during this lecture.\n"
+        "Task 5: Complete the assignment and explain your solution.\n"
+        "Exercise 4: Write a function that processes the input data.\n"
+        "Bob: Can you explain how we should approach the assignment?"
+    )
+
+    transcript = parse(text)
+
+    assert transcript.speakers == ["Alice", "Bob"]
+    assert "Task 5:" in transcript.text
+    assert "Exercise 4:" in transcript.text
