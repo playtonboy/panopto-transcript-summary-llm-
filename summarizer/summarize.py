@@ -126,7 +126,10 @@ def summarize(
     done = steps - 3
 
     speaker_hint = (
-        f"The speakers are: {', '.join(transcript.speakers)}. Mention who said what when it matters. "
+        f"The speakers are: {', '.join(transcript.speakers)}; "
+        "[Name] in the transcript shows who starts speaking. "
+        "When a point comes from someone other than the main lecturer "
+        "(a guest or a student question), name who said it. "
         if len(transcript.speakers) > 1
         else ""
     )

@@ -53,3 +53,21 @@ def test_parse_accepts_normal_spoken_language():
 
     transcript = parse(valid_text)
     assert transcript.word_count == 65
+
+def test_parse_marks_who_is_speaking_when_there_are_several_speakers():
+    transcript = parse(SAMPLE)
+    assert transcript.text.startswith("[Alice Smith] Good morning everyone")
+    assert "[Bob] Does that mean" in transcript.text
+    assert transcript.text.count("[Alice Smith]") == 2
+
+
+def test_parse_adds_no_speaker_marks_for_a_single_lecturer():
+    one_speaker = SAMPLE.replace("Bob:", "Alice Smith:")
+    transcript = parse(one_speaker)
+    assert transcript.speakers == ["Alice Smith"]
+    assert "[" not in transcript.text
+
+
+def test_parse_understands_panopto_numbered_speakers():
+    numbered = SAMPLE.replace("Alice Smith:", "Speaker 1:").replace("Bob:", "Speaker 2:")
+    assert parse(numbered).speakers == ["Speaker 1", "Speaker 2"]
