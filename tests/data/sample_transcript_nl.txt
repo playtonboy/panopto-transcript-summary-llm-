@@ -1,0 +1,9 @@
+1
+00:00:01.000 --> 00:00:06.000
+Goedemorgen allemaal, vandaag bespreken we het testen van software.
+2
+00:00:06.500 --> 00:00:12.000
+Een unittest controleert één klein stukje code, los van de rest van het programma.
+3
+00:00:12.500 --> 00:00:18.000
+Vergeet niet dat opdracht vijf op zes november ingeleverd moet worden.

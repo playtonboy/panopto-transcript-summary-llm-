@@ -14,7 +14,9 @@ SYSTEM_PROMPT = (
     "Ignore filler speech, greetings and small talk unless it contains deadlines or tasks."
 )
 
+# Added to the system prompt: read any language (SCRUM-30), answer in the chosen one (SCRUM-43).
 LANGUAGE_HINT = (
+    " The transcript can be in any language, for example Dutch or English, or a mix of both."
     " Always write your answer in {language}. Keep technical and academic terms that have no common "
     "{language} translation in their original form."
 )
