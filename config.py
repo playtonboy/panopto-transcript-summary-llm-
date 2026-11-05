@@ -15,8 +15,11 @@ CHARS_PER_TOKEN = 4
 CHUNK_TOKENS = 12000
 CHUNK_OVERLAP_TOKENS = 200
 
-# NFR12: shown under every summary and added to copy, .txt and .docx output (academic integrity).
 AI_DISCLAIMER = (
     "AI-generated summary: created by a local language model from the lecture transcript. "
     "It may contain mistakes or miss details, so check important points against the original lecture."
 )
+
+ORCHESTRATOR_URL = "http://localhost:8000"
+WORKER_POLL_S = 1.0   # how often an idle worker asks for a new job (seconds)
+WORKER_SEEN_S = 10    # a worker counts as running if it asked for work this recently (seconds)
