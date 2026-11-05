@@ -2,7 +2,6 @@
 
 import builtins
 import io
-import tomllib
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -27,6 +26,7 @@ def test_lm_studio_address_is_this_computer():
 
 
 def test_streamlit_sends_no_usage_stats_and_is_only_reachable_locally():
+    tomllib = pytest.importorskip("tomllib")  # Python 3.11+; skipped on older Python
     settings = tomllib.loads((ROOT / ".streamlit" / "config.toml").read_text(encoding="utf-8"))
     assert settings["browser"]["gatherUsageStats"] is False
     assert settings["server"]["address"] == "localhost"
