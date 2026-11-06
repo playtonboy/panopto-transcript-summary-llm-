@@ -1,0 +1,3 @@
+# SCRUM-14: keep the start scripts working on every computer, whoever commits them.
+*.sh  text eol=lf
+*.bat text eol=crlf
