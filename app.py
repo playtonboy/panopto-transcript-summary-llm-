@@ -8,8 +8,8 @@ from pathlib import Path
 import streamlit as st
 
 import config
-from summarizer import export, llm_client
-from summarizer.summarize import summarize
+from interface import client
+from summarizer import export
 from summarizer.transcript import TranscriptError, parse
 from summarizer.upload_validation import decode, validate_upload
 from summarizer.copy_button import show_copy_button
@@ -18,9 +18,10 @@ st.set_page_config(page_title="Lecture Summarizer")
 st.title("Panopto Lecture Summarizer")
 st.caption("Runs entirely on your computer with LM Studio. Your transcript never leaves this machine.")
 
-if not llm_client.is_server_running():
-    st.warning("LM Studio is not running. Open LM Studio, load the model and start the local server before generating.")
-
+# Task 6: the interface only talks to the orchestrator, which hands the work to an AI worker.
+if not client.is_running():
+    st.warning("The summarizer service is not running. Start it with start.bat (Windows) or ./start.sh (macOS).")
+    
 # Input: upload (SCRUM-46) or paste (SCRUM-35)
 upload_tab, paste_tab = st.tabs(["Upload transcript", "Paste text"])
 with upload_tab:
@@ -57,18 +58,17 @@ if st.button("Generate summary", type="primary"):
             raise TranscriptError("Please upload a transcript or paste its text first.")
         transcript = parse(raw)
 
-        progress = st.progress(0.0, text="Starting...")
-        st.session_state.summary = summarize(
-            transcript,
-            detail_level=detail,
-            language=language,
-            on_progress=lambda message, fraction: progress.progress(fraction, text=message),
+        progress = st.progress(0.0, text="Sending the transcript to the summarizer...")
+        job_id = client.submit(transcript, detail_level=detail, language=language)
+        st.session_state.summary = client.wait_for_summary(
+            job_id, on_progress=lambda message, fraction: progress.progress(fraction, text=message)
         )
+
         # Pasted text has no file name, so it keeps the title from the transcript (or "Lecture summary").
         st.session_state.default_title = (
             Path(uploaded_file.name).stem if uploaded_file is not None else st.session_state.summary.title
         )
-    except (TranscriptError, llm_client.LLMError) as error:
+    except (TranscriptError, client.JobFailed) as error:
         st.error(str(error))
 
     except Exception:
