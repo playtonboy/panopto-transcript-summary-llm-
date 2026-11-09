@@ -26,6 +26,7 @@ db.execute(
         message TEXT NOT NULL DEFAULT 'Waiting for a worker...',
         result_title TEXT, result_body TEXT, error TEXT,
         worker TEXT,
+        attempts INTEGER NOT NULL DEFAULT 0,
         created REAL NOT NULL, updated REAL NOT NULL
     )"""
 )
@@ -53,11 +54,37 @@ class Failure(BaseModel):
     message: str
 
 
+def _requeue_stale_jobs():
+    """Retry jobs whose worker stopped responding, up to one retry."""
+    cutoff = time.time() - config.JOB_STALE_S
+
+    stale_jobs = db.execute(
+        "SELECT id, attempts FROM jobs WHERE status = 'running' AND updated < ?",
+        (cutoff,),
+    ).fetchall()
+
+    for job in stale_jobs:
+        if job["attempts"] < config.JOB_MAX_ATTEMPTS:
+            db.execute(
+                "UPDATE jobs SET status = 'queued', worker = NULL, progress = 0, "
+                "message = 'The worker stopped. Trying again...', updated = ? WHERE id = ?",
+                (time.time(), job["id"]),
+            )
+        else:
+            db.execute(
+                "UPDATE jobs SET status = 'failed', message = 'Failed', "
+                "error = 'The worker stopped responding after two attempts.', "
+                "text = NULL, updated = ? WHERE id = ?",
+                (time.time(), job["id"]),
+            )
+
 def _get(job_id: str) -> sqlite3.Row:
     row = db.execute("SELECT * FROM jobs WHERE id = ?", (job_id,)).fetchone()
     if row is None:
         raise HTTPException(status_code=404, detail="Unknown job")
     return row
+
+
 
 
 @app.get("/health")
@@ -82,6 +109,7 @@ def create_job(job: JobRequest):
 @app.get("/jobs/{job_id}")
 def get_job(job_id: str):
     with lock:
+        _requeue_stale_jobs()
         row = _get(job_id)
     return {
         "id": row["id"],
@@ -98,12 +126,14 @@ def get_job(job_id: str):
 def next_job(worker: str = "worker"):
     """Give the oldest waiting job to this worker, or 204 No Content when there is nothing to do."""
     with lock:
+        _requeue_stale_jobs()
         workers_seen[worker] = time.time()
         row = db.execute("SELECT * FROM jobs WHERE status = 'queued' ORDER BY created LIMIT 1").fetchone()
         if row is None:
             return Response(status_code=204)
         db.execute(
-            "UPDATE jobs SET status = 'running', worker = ?, message = 'Starting...', updated = ? WHERE id = ?",
+            "UPDATE jobs SET status = 'running', worker = ?,"
+            " attempts= attempts+1, message = 'Starting...', updated = ? WHERE id = ?",
             (worker, time.time(), row["id"]),
         )
     return {
