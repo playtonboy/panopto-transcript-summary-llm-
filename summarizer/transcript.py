@@ -6,7 +6,6 @@ import config
 class Transcript:
     text: str #stores cleaned lecture script
     title: str = ""
-    url: str = "" #stores panotop link, if its available
     speakers: list[str] = field(default_factory=list) #stores a list of people speaking
 
     @property
@@ -21,18 +20,17 @@ TIMESTAMP_PATTERN = re.compile(
 
 NUMBER_PATTERN = re.compile(r"^\s*\d+\s*$")
 
-URL_PATTERN = re.compile(r"https?://\S*panopto\S*", re.IGNORECASE)
-
 TITLE_PATTERN = re.compile(r"^Title:\s*(.*)$", re.IGNORECASE)
 
-SPEAKER_PATTERN = re.compile(r"^([A-Z][\w.'-]*(?: [A-Z][\w.'-]*){0,2}):\s*(.+)$")
+SPEAKER_PATTERN = re.compile(
+    r"^((?:Speaker \d+)|(?:[A-Z][\w.'-]*(?: [A-Z][\w.'-]*){0,2})):\s*(.+)$"
+)
 
 class TranscriptError(Exception): #this is custom error for transcripts that fail validation (if script is too short)
     pass
 
 def parse(raw_text: str) -> Transcript: #returns original transcript as object
     title = "" #store information that is found
-    url = ""
     speakers = []
     cleaned_lines = [] #list to collect actual spoken words
 
@@ -54,14 +52,8 @@ def parse(raw_text: str) -> Transcript: #returns original transcript as object
             title=title_match.group(1)
             continue
 
-        #find the panopto URL
-        url_match = URL_PATTERN.search(line)
-        if url_match:
-            if not url:
-                url = url_match.group()
-            continue 
-
         #find speaker names
+        speaker=None
         speaker_match = SPEAKER_PATTERN.match(line)
         if speaker_match:
             speaker = speaker_match.group(1)
@@ -71,10 +63,21 @@ def parse(raw_text: str) -> Transcript: #returns original transcript as object
                 speakers.append(speaker)
 
         # Keep the spoken words
-        cleaned_lines.append(line)
+        cleaned_lines.append((speaker,line))
 
-    #combines all spoken lines into one text
-    text = " ".join(cleaned_lines)
+    # Mark speaker changes when multiple speakers are present
+    lines = []
+    current = None
+
+    for speaker, line in cleaned_lines:
+        if len(speakers) > 1 and speaker and speaker != current:
+            line = f"[{speaker}] {line}"
+            current = speaker
+
+        lines.append(line)
+
+    # Combine all spoken lines into one text
+    text = " ".join(lines)
 
     # Remove extra whitespace
     text = re.sub(r"\s+", " ", text).strip()
@@ -83,7 +86,6 @@ def parse(raw_text: str) -> Transcript: #returns original transcript as object
     transcript = Transcript(
         text=text,
         title=title,
-        url=url,
         speakers=speakers
     )
 
@@ -91,6 +93,15 @@ def parse(raw_text: str) -> Transcript: #returns original transcript as object
     if transcript.word_count < config.MIN_TRANSCRIPT_WORDS:
         raise TranscriptError(
             f"Transcript too short ({transcript.word_count} words)."
+        )
+
+    letters = sum(char.isalpha() for char in text)
+    meaningful_ratio = letters / len(text) if text else 0
+
+    if meaningful_ratio < 0.5:
+        raise TranscriptError(
+            "This file does not appear to contain a valid transcript. "
+            "Please upload a text file containing spoken language."
         )
 
     return transcript

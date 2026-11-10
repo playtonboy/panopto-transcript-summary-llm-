@@ -1,3 +1,7 @@
 streamlit
 requests
 python-docx
+pytest
+fastapi
+uvicorn
+httpx
