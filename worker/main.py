@@ -38,6 +38,12 @@ def run_one_job(name: str) -> bool:
         )
     except llm_client.LLMError as error:  # LM Studio down, too slow, ... : the message is meant for the student
         requests.post(f"{url}/error", json={"message": str(error)}, timeout=10)
+    except Exception:
+        requests.post(
+            f"{url}/error",
+            json={"message": "An unexpected error occurred while generating the summary."},
+            timeout=10,
+        )
     else:
         requests.post(f"{url}/result", json={"title": summary.title, "body": summary.body}, timeout=10)
     return True
@@ -47,8 +53,12 @@ def main() -> None:
     name = sys.argv[1] if len(sys.argv) > 1 else f"{socket.gethostname()}-{time.time_ns() % 10000}"
     print(f"Worker {name} is waiting for jobs from {config.ORCHESTRATOR_URL} (stop with Ctrl+C)")
     while True:
-        if not run_one_job(name):
-            time.sleep(config.WORKER_POLL_S)
+        try:
+            if not run_one_job(name):
+                time.sleep(config.WORKER_POLL_S)
+        except requests.RequestException:
+            print("Cannot reach the orchestrator. Retrying in 5 seconds...")
+            time.sleep(5)
 
 
 if __name__ == "__main__":

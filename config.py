@@ -23,3 +23,8 @@ AI_DISCLAIMER = (
 ORCHESTRATOR_URL = "http://localhost:8000"
 WORKER_POLL_S = 1.0   # how often an idle worker asks for a new job (seconds)
 WORKER_SEEN_S = 10    # a worker counts as running if it asked for work this recently (seconds)
+
+# Service failure handling (SCRUM-53)
+JOB_STALE_S = REQUEST_TIMEOUT_S + 60
+JOB_MAX_ATTEMPTS = 2
+INTERFACE_TIMEOUT_S = 30 * 60

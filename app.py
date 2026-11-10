@@ -18,9 +18,19 @@ st.set_page_config(page_title="Lecture Summarizer")
 st.title("Panopto Lecture Summarizer")
 st.caption("Runs entirely on your computer with LM Studio. Your transcript never leaves this machine.")
 
-# Task 6: the interface only talks to the orchestrator, which hands the work to an AI worker.
-if not client.is_running():
-    st.warning("The summarizer service is not running. Start it with start.bat (Windows) or ./start.sh (macOS).")
+
+status = client.health()
+
+if status is None:
+    st.warning(
+        "The summarizer service is not running. "
+        "Start it with start.bat (Windows) or ./start.sh (macOS)."
+    )
+elif status.get("workers", 0) == 0:
+    st.warning(
+        "No AI worker is currently running. "
+        "Your summary will wait until a worker becomes available."
+    )
     
 # Input: upload (SCRUM-46) or paste (SCRUM-35)
 upload_tab, paste_tab = st.tabs(["Upload transcript", "Paste text"])
