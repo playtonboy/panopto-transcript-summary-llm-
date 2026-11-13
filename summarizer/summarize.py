@@ -23,22 +23,41 @@ LANGUAGE_HINT = (
 
 CHUNK_PROMPT = (
     "Below is part {index} of {total} of a lecture transcript. Write concise notes covering every "
-    "important concept, definition, example and task mentioned in this part. Copy every assignment, "
-    "deadline, reading, test and project requirement word for word.\n\n"
+    "important concept, definition, example and argument the lecturer explains in this part.\n"
+    "Then add a last section that starts with the line 'Student tasks:' and lists everything the "
+    "students of this course are asked to do themselves (assignments, deadlines, readings, tests, "
+    "forming groups, checking a link or recording, project requirements), with any date. Lecturers "
+    "often ask informally, for example 'I would like you to read...', 'please check if you can "
+    "access...', 'form a group before the tutorial': list these too. Write 'Student tasks: none' only "
+    "if there are none. Things that AI systems, companies or engineers in general should do are "
+    "lecture content, not student tasks.\n\n"
     "TRANSCRIPT PART:\n{chunk}"
 )
 
+# SCRUM-18: without limits the model listed 22 "topics", including the recap quiz and group forming.
 TOPICS_PROMPT = (
-    "List the main topics of the lecture below as a short Markdown bullet list (one '- ' line per topic, "
-    "a few words each, in lecture order). Output only the list.\n\n"
+    "List the main topics of the lecture below as a short Markdown bullet list: between 3 and 7 topics, "
+    "one '- ' line per topic, 2 to 6 words each, in lecture order. A topic is a subject that is taught "
+    "(for example 'Supervised learning'). Merge closely related subtopics into one topic. Do not list "
+    "organisation (recordings, group forming, breaks, the tutorial), recap or quiz questions, or single "
+    "examples as topics. Output only the list.\n\n"
     "MATERIAL:\n{material}"
 )
+MAX_TOPICS = 8  # safety net in case the model still lists too many
 
 # Small models follow a count far better when they number the lines, so we ask for 1..N
 # and turn the numbers into bullets afterwards.
+# SCRUM-18: points used to pile up at the start of the lecture (e.g. the recap quiz) and miss the
+# middle, so we name the topics and ask for the points to be spread over the whole lecture.
 SUMMARY_PROMPT = (
     "Write the key insights of the lecture below as a numbered list with exactly {bullets} points, "
-    "numbered 1 to {bullets}, in lecture order. Each point is one sentence. "
+    "numbered 1 to {bullets}, in lecture order. Each point is one short sentence (at most 25 words) "
+    "that states one thing the lecturer taught: a concept, definition, example or argument.\n"
+    "Spread the points over the whole lecture (beginning, middle and end). The main topics are: "
+    "{topics}. Give every main topic at least one point.\n"
+    "Do not spend points on organisation (recordings, groups, breaks, the tutorial), on repeating "
+    "recap or quiz questions, or on empty statements like 'the lecture discussed X': say what was said "
+    "about X. Use only facts from the material below; if something is not there, leave it out.\n"
     "{depth}{speaker_hint}Output only the numbered list.\n\n"
     "MATERIAL:\n{material}"
 )
@@ -51,11 +70,19 @@ FIX_COUNT_PROMPT = (
     "LECTURE:\n{material}"
 )
 
+# SCRUM-18: the model used to turn lecture content ("systems need monitoring", "costs change") into
+# action items, so we say exactly who the tasks are for and what does not count.
 ACTION_ITEMS_PROMPT = (
-    "Find everything in the lecture below that students have to do. That includes assignments, "
-    "deadlines, readings, quizzes and exams, and requirements for their projects or coursework "
-    "(anything they 'must' do or that is graded). Write each one as a Markdown bullet ('- '), "
-    "with its date or time if one is given. Output only the list. "
+    "Find everything in the lecture below that the students of this course are asked to do themselves. "
+    "That includes assignments, deadlines, readings, quizzes and exams, forming project groups, "
+    "preparing for the tutorial, checking a link or recording, and requirements for their projects or "
+    "coursework. Lecturers often ask informally, for example 'I would like you to read...', "
+    "'please check if you can access...', 'form a group before the tutorial': these are tasks too.\n"
+    "Do NOT list what AI systems, companies, engineers or 'we' in general should do when building a "
+    "system: that is lecture content, not a task for the students. Understanding, learning or "
+    "knowing a topic of the lecture is not a task either.\n"
+    "Write each task as one short Markdown bullet ('- ') that starts with a verb, with its date or time "
+    "if one is given, and no sub-points. Output only the list. "
     "If there is nothing, output exactly: None mentioned\n\n"
     "MATERIAL:\n{material}"
 )
@@ -90,9 +117,15 @@ def _as_bullets(items: list[str]) -> str:
     return "\n".join(f"- {item}" for item in items)
 
 
-def _summary_points(system: str, material: str, bullets: int, detail_level: str, speaker_hint: str) -> list[str]:
+def _summary_points(
+    system: str, material: str, bullets: int, detail_level: str, speaker_hint: str, topics: list[str]
+) -> list[str]:
     prompt = SUMMARY_PROMPT.format(
-        bullets=bullets, depth=DEPTH_HINTS.get(detail_level, ""), speaker_hint=speaker_hint, material=material
+        bullets=bullets,
+        topics="; ".join(topics) or "see the material",
+        depth=DEPTH_HINTS.get(detail_level, ""),
+        speaker_hint=speaker_hint,
+        material=material,
     )
     points = _list_items(llm_client.chat(system, prompt), NUMBERED_LINE)
     if points and len(points) != bullets:
@@ -147,9 +180,10 @@ def summarize(
 
     on_progress("Finding the main topics...", done / steps)
     topics = _list_items(llm_client.chat(system, TOPICS_PROMPT.format(material=material)), BULLET_LINE)
+    topics = topics[:MAX_TOPICS]
 
     on_progress("Writing the summary...", (done + 1) / steps)
-    points = _summary_points(system, material, bullets, detail_level, speaker_hint)
+    points = _summary_points(system, material, bullets, detail_level, speaker_hint, topics)
 
     on_progress("Collecting action items...", (done + 2) / steps)
     actions = _list_items(llm_client.chat(system, ACTION_ITEMS_PROMPT.format(material=material)), BULLET_LINE)
