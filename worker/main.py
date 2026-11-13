@@ -1,12 +1,7 @@
-"""AI worker (Task 6, SCRUM-51): takes jobs from the orchestrator and summarizes them with LM Studio.
-
-Run with:  python -m worker.main
-Start it in a second terminal to get a second worker: two lectures are then summarized at the same time.
-"""
-
 import socket
-import sys
+import argparse
 import time
+from typing import List, Optional
 
 import requests
 
@@ -49,17 +44,30 @@ def run_one_job(name: str) -> bool:
     return True
 
 
+def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
+    """Read the worker's name and settings from the command line (SCRUM-56)."""
+    parser = argparse.ArgumentParser(description="AI worker: summarizes jobs from the orchestrator with LM Studio.")
+    parser.add_argument("name", nargs="?", default=f"{socket.gethostname()}-{time.time_ns() % 10000}")
+    parser.add_argument("--model", default=config.MODEL_NAME, help="LM Studio API id of the model to use")
+    parser.add_argument("--lmstudio-url", default=config.LMSTUDIO_BASE_URL, help="LM Studio server address")
+    return parser.parse_args(argv)
+
+
 def main() -> None:
-    name = sys.argv[1] if len(sys.argv) > 1 else f"{socket.gethostname()}-{time.time_ns() % 10000}"
-    print(f"Worker {name} is waiting for jobs from {config.ORCHESTRATOR_URL} (stop with Ctrl+C)")
+    args = parse_args()
+    config.MODEL_NAME, config.LMSTUDIO_BASE_URL = args.model, args.lmstudio_url
+    print(f"Worker {args.name} uses model '{config.MODEL_NAME}' at {config.LMSTUDIO_BASE_URL}")
+    warning = llm_client.model_warning()
+    if warning:
+        print("Warning: " + warning)
+    print(f"Waiting for jobs from {config.ORCHESTRATOR_URL} (stop with Ctrl+C)")
     while True:
         try:
-            if not run_one_job(name):
+            if not run_one_job(args.name):
                 time.sleep(config.WORKER_POLL_S)
         except requests.RequestException:
-            print("Cannot reach the orchestrator. Retrying in 5 seconds...")
+            print("Cannot reach the orchestrator, trying again in 5 seconds...")
             time.sleep(5)
-
 
 if __name__ == "__main__":
     main()

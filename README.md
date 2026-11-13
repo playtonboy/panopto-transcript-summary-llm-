@@ -1,4 +1,7 @@
 # panopto-transcript-summary-llm-
+
+**New here?** Follow the [installation guide](docs/INSTALL.md).
+
 description.
 
 ## Privacy (SCRUM-29: NFR3, NFR4, NFR10)

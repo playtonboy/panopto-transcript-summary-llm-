@@ -6,7 +6,7 @@ ALLOWED_EXTENSIONS = (".txt",)
 MAX_UPLOAD_MB = 5
 DETAIL_LEVELS = {"Short": 5, "Medium": 10, "Detailed": 15}
 DEFAULT_DETAIL_LEVEL = "Medium"
-OUTPUT_LANGUAGES = ["English", "Dutch", "German"]  # SCRUM-43: languages the summary can be written in
+OUTPUT_LANGUAGES = ["English", "Dutch", "German"]  # languages the summary can be written in
 DEFAULT_OUTPUT_LANGUAGE = "English"
 REQUEST_TIMEOUT_S = 300   # how long we wait for the model (seconds)
 MAX_OUTPUT_TOKENS = 1500  # longest answer the model may give
@@ -24,7 +24,9 @@ ORCHESTRATOR_URL = "http://localhost:8000"
 WORKER_POLL_S = 1.0   # how often an idle worker asks for a new job (seconds)
 WORKER_SEEN_S = 10    # a worker counts as running if it asked for work this recently (seconds)
 
-# Service failure handling (SCRUM-53)
+# Service failure handling
 JOB_STALE_S = REQUEST_TIMEOUT_S + 60
 JOB_MAX_ATTEMPTS = 2
 INTERFACE_TIMEOUT_S = 30 * 60
+
+MODEL_NAME = "qwen2.5-7b-instruct"  # the API id LM Studio shows for the loaded model
