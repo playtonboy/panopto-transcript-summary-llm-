@@ -3,6 +3,8 @@
 The interface only sends jobs and reads their status. It never calls LM Studio or summarize() itself.
 """
 
+from typing import Optional
+from urllib.parse import urlparse
 import time
 from collections.abc import Callable
 
@@ -22,17 +24,28 @@ class JobFailed(RuntimeError):
     """The summary could not be made. The message is shown to the student."""
 
 
-def is_running() -> bool:
+def is_local(url: str) -> bool:
+    return (
+        urlparse(url).scheme == "http"
+        and urlparse(url).hostname in ("localhost", "127.0.0.1")
+    )
+
+
+def _base(url: Optional[str]) -> str:
+    return (url or config.ORCHESTRATOR_URL).rstrip("/")
+
+
+def is_running(url: Optional[str] = None) -> bool:
     try:
-        return requests.get(f"{config.ORCHESTRATOR_URL}/health", timeout=3).ok
+        return requests.get(f"{_base(url)}/health", timeout=3).ok
     except requests.RequestException:
         return False
 
-def health():
+def health(url: Optional[str]=None):
     """Get the orchestrator status and number of active workers."""
     try:
         response = requests.get(
-            f"{config.ORCHESTRATOR_URL}/health",
+            f"{_base(url)}/health",
             timeout=3,
         )
         response.raise_for_status()
@@ -42,11 +55,11 @@ def health():
 
 
 
-def submit(transcript: Transcript, detail_level: str, language: str) -> str:
+def submit(transcript: Transcript, detail_level: str, language: str, url:Optional[str]=None) -> str:
     """Put a new job in the queue and return its id."""
     try:
         response = requests.post(
-            f"{config.ORCHESTRATOR_URL}/jobs",
+            f"{_base(url)}/jobs",
             json={
                 "text": transcript.text,
                 "title": transcript.title,
@@ -64,14 +77,14 @@ def submit(transcript: Transcript, detail_level: str, language: str) -> str:
 
 
 
-def wait_for_summary(job_id: str, on_progress: Callable[[str, float], None]) -> Summary:
+def wait_for_summary(job_id: str, on_progress: Callable[[str, float], None], url:Optional[str]=None) -> Summary:
     """Wait for a summary, handling connection failures and timeouts."""
     deadline = time.monotonic() + config.INTERFACE_TIMEOUT_S
 
     while time.monotonic() < deadline:
         try:
             response = requests.get(
-                f"{config.ORCHESTRATOR_URL}/jobs/{job_id}",
+                f"{_base(url)}/jobs/{job_id}",
                 timeout=10,
             )
             response.raise_for_status()
@@ -86,7 +99,7 @@ def wait_for_summary(job_id: str, on_progress: Callable[[str, float], None]) -> 
             raise JobFailed(job.get("error") or "The summary could not be completed.")
 
         if job["status"] == "queued":
-            status = health()
+            status = health(url)
             if status is None:
                 raise JobFailed(NOT_RUNNING)
             if status.get("workers", 0) == 0:
