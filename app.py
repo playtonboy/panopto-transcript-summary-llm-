@@ -19,7 +19,31 @@ st.title("Panopto Lecture Summarizer")
 st.caption("Runs entirely on your computer with LM Studio. Your transcript never leaves this machine.")
 
 
-status = client.health()
+
+# Settings for this browser session only
+with st.sidebar:
+    st.header("Settings")
+
+    orchestrator_url = st.text_input(
+        "Summarizer service address",
+        value=config.ORCHESTRATOR_URL,
+        help="Only change this if you started the orchestrator on another port.",
+    ).strip()
+
+    if not client.is_local(orchestrator_url):
+        st.error(
+            "Only addresses on this computer (http://localhost:...) "
+            "are allowed, so your transcript stays here."
+        )
+        orchestrator_url = config.ORCHESTRATOR_URL
+
+    st.caption(
+        f"AI model: chosen when you start a worker (default `{config.MODEL_NAME}`). "
+        "Use another one with: `python -m worker.main --model <id>`"
+    )
+
+status = client.health(orchestrator_url)
+
 
 if status is None:
     st.warning(
@@ -69,10 +93,14 @@ if st.button("Generate summary", type="primary"):
         transcript = parse(raw)
 
         progress = st.progress(0.0, text="Sending the transcript to the summarizer...")
-        job_id = client.submit(transcript, detail_level=detail, language=language)
+        job_id = client.submit(transcript, detail_level=detail, language=language, url=orchestrator_url,)
         st.session_state.summary = client.wait_for_summary(
-            job_id, on_progress=lambda message, fraction: progress.progress(fraction, text=message)
+            job_id, on_progress=lambda message, fraction: progress.progress(
+                fraction, text=message
+            ),
+            url=orchestrator_url,
         )
+        
 
         # Pasted text has no file name, so it keeps the title from the transcript (or "Lecture summary").
         st.session_state.default_title = (
