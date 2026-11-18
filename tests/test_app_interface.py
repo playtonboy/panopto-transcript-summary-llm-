@@ -32,9 +32,6 @@ def test_generate_sends_a_job_and_shows_the_result(monkeypatch):
     transcript, options = sent[0]
     assert transcript.text.startswith("Good morning everyone")
     assert options == {"detail_level": "Medium", "language": "English","url":"http://localhost:8000",}
-    print("MARKDOWN:", [m.value for m in at.markdown])
-    print("ERRORS:", [e.value for e in at.error])
-    print("WARNINGS:", [w.value for w in at.warning])
     assert any("Unit tests check one function." in m.value for m in at.markdown)
 
 

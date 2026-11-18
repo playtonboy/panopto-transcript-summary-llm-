@@ -99,7 +99,7 @@ def wait_for_summary(job_id: str, on_progress: Callable[[str, float], None], url
             raise JobFailed(job.get("error") or "The summary could not be completed.")
 
         if job["status"] == "queued":
-            status = health()
+            status = health(url)
             if status is None:
                 raise JobFailed(NOT_RUNNING)
             if status.get("workers", 0) == 0:
