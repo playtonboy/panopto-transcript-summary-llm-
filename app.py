@@ -1,8 +1,3 @@
-"""Streamlit interface: upload or paste -> Generate -> summary on screen (UR12, FR6, FR13).
-
-Run with:  streamlit run app.py
-"""
-
 from pathlib import Path
 
 import streamlit as st
@@ -115,10 +110,8 @@ if st.button("Generate summary", type="primary"):
             "Please try again or check your file."
         )
 
-# Result (FR6). Kept in session_state because Streamlit re-runs the script on every click.
 summary = st.session_state.get("summary")
 if summary:
-    # Applied on every rerun, so editing the title field updates the summary without generating again.
     summary.title = custom_title.strip() or st.session_state.get("default_title", summary.title)
     st.divider()
     st.subheader(summary.title)
@@ -131,4 +124,5 @@ if summary:
         file_name="summary.docx",
         mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     )
+    st.download_button("Download .pdf", export.to_pdf(summary), file_name="summary.pdf", mime="application/pdf")
     show_copy_button(summary.as_text(), "Copy summary")
