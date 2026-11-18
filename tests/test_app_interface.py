@@ -84,3 +84,43 @@ def test_settings_panel_refuses_addresses_on_other_computers(monkeypatch):
 
     assert "Only addresses on this computer" in at.sidebar.error[0].value
     assert seen[-1] == "http://localhost:8000"
+
+
+def test_regenerate_uses_the_same_transcript_with_the_new_settings(monkeypatch):
+    bodies = iter(["## Summary\n- First version.", "## Summary\n- Second version."])
+
+    def finished(job_id, on_progress, url=None):
+        return Summary(title="Lecture summary", body=next(bodies))
+
+    at, sent = run_with_fake_orchestrator(monkeypatch, finished)
+    assert not at.button[1].disabled
+    at.radio[0].set_value("Short")
+    at.button[1].click().run()
+
+    assert not at.exception
+    assert len(sent) == 2
+    assert sent[1][0].text == sent[0][0].text
+    assert sent[1][1]["detail_level"] == "Short"
+    assert any("Second version." in m.value for m in at.markdown)
+    assert "(1)" in at.expander[0].label
+    assert any("First version." in m.value for m in at.expander[0].markdown)
+
+
+def test_regenerate_is_disabled_before_the_first_summary(monkeypatch):
+    monkeypatch.setattr(client, "health", lambda url=None: {"status": "ok", "workers": 1})
+    at = AppTest.from_file("../app.py", default_timeout=30)
+    at.run()
+    assert at.button[1].disabled
+
+
+def test_history_keeps_only_the_last_five_summaries(monkeypatch):
+    count = iter(range(1, 100))
+
+    def finished(job_id, on_progress, url=None):
+        return Summary(title="Lecture summary", body=f"- Version {next(count)}.")
+
+    at, _ = run_with_fake_orchestrator(monkeypatch, finished)
+    for _ in range(6):
+        at.button[1].click().run()
+    assert len(at.session_state["history"]) == 5
+    assert "(4)" in at.expander[0].label

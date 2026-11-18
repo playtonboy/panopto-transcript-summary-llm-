@@ -1,3 +1,4 @@
+from dataclasses import replace
 from pathlib import Path
 
 import streamlit as st
@@ -66,7 +67,7 @@ detail = st.radio(
     horizontal=True,
 )
 
-# Output language (SCRUM-43)
+# Output language 
 language = st.selectbox(
     "Summary language",
     config.OUTPUT_LANGUAGES,
@@ -76,8 +77,37 @@ language = st.selectbox(
 # Custom title (FR17). Empty -> the uploaded file's name without .txt.
 custom_title = st.text_input("Summary title (optional)", placeholder="Leave empty to use the file name")
 
-if st.button("Generate summary", type="primary"):
-    try:
+HISTORY_SIZE = 5
+
+
+def summarize_now(transcript, source_title):
+    """Send the transcript to the orchestrator, wait for the summary and keep it for this session."""
+    progress = st.progress(0.0, text="Sending the transcript to the summarizer...")
+    job_id = client.submit(transcript, detail_level=detail, language=language, url=orchestrator_url)
+    summary = client.wait_for_summary(
+        job_id,
+        on_progress=lambda message, fraction: progress.progress(fraction, text=message),
+        url=orchestrator_url,
+    )
+    st.session_state.default_title = source_title or summary.title
+    st.session_state.summary = summary
+    history = st.session_state.setdefault("history", [])
+    history.insert(
+        0, {"summary": replace(summary, title=st.session_state.default_title), "detail": detail, "language": language}
+    )
+    del history[HISTORY_SIZE:]
+
+
+generate_column, regenerate_column = st.columns(2)
+generate = generate_column.button("Generate summary", type="primary")
+regenerate = regenerate_column.button(
+    "Regenerate with these settings",
+    disabled="transcript" not in st.session_state,
+    help="Make a new summary of the same transcript, for example with another detail level or language.",
+)
+
+try:
+    if generate:
         if uploaded_file is not None:
             validate_upload(uploaded_file.name, uploaded_file.size)
             raw = decode(uploaded_file.getvalue())
@@ -85,30 +115,20 @@ if st.button("Generate summary", type="primary"):
             raw = pasted_text
         else:
             raise TranscriptError("Please upload a transcript or paste its text first.")
-        transcript = parse(raw)
+        # kept in memory only, so Regenerate does not need the file again
+        st.session_state.transcript = parse(raw)
+        st.session_state.source_title = Path(uploaded_file.name).stem if uploaded_file is not None else None
+        summarize_now(st.session_state.transcript, st.session_state.source_title)
+        st.session_state.enable_regenerate = True
+    elif regenerate:
+        summarize_now(st.session_state.transcript, st.session_state.source_title)
+except (TranscriptError, client.JobFailed) as error:
+    st.error(str(error))
+except Exception:
+    st.error("Something unexpected went wrong while processing your transcript. Please try again or check your file.")
 
-        progress = st.progress(0.0, text="Sending the transcript to the summarizer...")
-        job_id = client.submit(transcript, detail_level=detail, language=language, url=orchestrator_url,)
-        st.session_state.summary = client.wait_for_summary(
-            job_id, on_progress=lambda message, fraction: progress.progress(
-                fraction, text=message
-            ),
-            url=orchestrator_url,
-        )
-        
-
-        # Pasted text has no file name, so it keeps the title from the transcript (or "Lecture summary").
-        st.session_state.default_title = (
-            Path(uploaded_file.name).stem if uploaded_file is not None else st.session_state.summary.title
-        )
-    except (TranscriptError, client.JobFailed) as error:
-        st.error(str(error))
-
-    except Exception:
-        st.error(
-            "Something unexpected went wrong while processing your transcript. "
-            "Please try again or check your file."
-        )
+if st.session_state.pop("enable_regenerate", False):
+    st.rerun()
 
 summary = st.session_state.get("summary")
 if summary:
@@ -126,3 +146,11 @@ if summary:
     )
     st.download_button("Download .pdf", export.to_pdf(summary), file_name="summary.pdf", mime="application/pdf")
     show_copy_button(summary.as_text(), "Copy summary")
+
+earlier = st.session_state.get("history", [])[1:]
+if earlier:
+    with st.expander(f"Earlier summaries in this session ({len(earlier)})"):
+        for number, item in enumerate(earlier, start=1):
+            st.markdown(f"**{number}. {item['summary'].title}** ({item['detail']}, {item['language']})")
+            st.markdown(item["summary"].body)
+            st.divider()
