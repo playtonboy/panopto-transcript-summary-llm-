@@ -1,6 +1,6 @@
 # All settings in one place.
 LMSTUDIO_BASE_URL = "http://localhost:1234/v1"
-MODEL_NAME = "local-model"
+MODEL_NAME = "qwen2.5-7b-instruct"  # the API id LM Studio shows for the loaded model
 TEMPERATURE = 0.2
 ALLOWED_EXTENSIONS = (".txt",)
 MAX_UPLOAD_MB = 5
@@ -28,5 +28,3 @@ WORKER_SEEN_S = 10    # a worker counts as running if it asked for work this rec
 JOB_STALE_S = REQUEST_TIMEOUT_S + 60
 JOB_MAX_ATTEMPTS = 2
 INTERFACE_TIMEOUT_S = 30 * 60
-
-MODEL_NAME = "qwen2.5-7b-instruct"  # the API id LM Studio shows for the loaded model

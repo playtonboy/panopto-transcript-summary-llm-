@@ -74,7 +74,7 @@ Open [http://localhost:1234/v1/models](http://localhost:1234/v1/models) in your 
 
 ![The /v1/models page](../model-selection/screenshots/server/02_v1_models_endpoint.png)
 
-The app asks LM Studio for exactly this id (`MODEL_NAME` in `config.py`). If you see a different id, change `MODEL_NAME` in `config.py` to match.
+The app asks LM Studio for exactly this id (`MODEL_NAME` in `config.py`). If you see a different id, you probably downloaded another file: download the lmstudio-community **Q4_K_M** file from part 2.2. When the id is wrong, the worker window shows a warning with the ids LM Studio has loaded.
 
 ---
 
@@ -132,10 +132,10 @@ Your browser opens the app by itself. If it doesn't, go to [http://localhost:850
 ## 5. Your first summary
 
 1. Get the transcript of a lecture as a **`.txt` file** (max 5 MB).
-2. In the app, upload the file.
+2. In the app, upload the file, or open the **Paste text** tab and paste the text.
 3. Choose the level of detail (Short, Medium or Detailed) and the language of the summary.
-4. Start the summary. You see the progress while it runs. A short text takes about a minute; a full lecture can take several minutes, especially without a graphics card.
-5. When it's done, you can copy the summary or download it as `.txt` or `.docx`.
+4. Click **Generate summary**. You see the progress while it runs. A short text takes about a minute; a full lecture can take several minutes, especially without a graphics card.
+5. When it's done, you can copy the summary or download it as `.txt`, `.docx` or `.pdf`.
 
 Your transcript and summary are never saved to disk or sent to the internet. Closing the browser tab removes them.
 
@@ -155,8 +155,10 @@ You can then close LM Studio as well.
 | What you see | What to do |
 | --- | --- |
 | `Python was not found` (Windows) | Reinstall Python and tick "Add python.exe to PATH" (part 1). |
-| The app says LM Studio is not running | Open LM Studio, load the model and set the server to **Running** (parts 2.3 and 2.4). |
+| `Could not reach LM Studio` | Open LM Studio, load the model and set the server to **Running** (parts 2.3 and 2.4). |
+| `The summarizer service is not running` | Start the app with `start.bat` / `./start.sh` (part 4), not with `streamlit run` alone. |
+| `No AI worker is currently running` | The worker window was closed. Stop the app and start it again (parts 6 and 4). |
 | `LM Studio returned 400` | The context length is too small. Eject the model, load it again with **Context Length 16384**, and check that **Just-in-Time Model Loading** is off (parts 2.3 and 2.4). |
-| `The model took too long to answer` | Your laptop is too slow for this lecture. Close other programs and try a shorter transcript. |
-| Wrong model / model not found | Check the id at [localhost:1234/v1/models](http://localhost:1234/v1/models) and make `MODEL_NAME` in `config.py` match (part 2.5). |
+| `The model took too long to answer` or `The summary took too long` | Your laptop is too slow for this lecture. Close other programs and try a shorter transcript. |
+| Wrong model / model not found | Check the id at [localhost:1234/v1/models](http://localhost:1234/v1/models) and load the lmstudio-community Q4_K_M file, so the id is `qwen2.5-7b-instruct` (part 2.5). |
 | `Permission denied` on macOS | Run `chmod +x start.sh` first, or start it with `bash start.sh`. |
