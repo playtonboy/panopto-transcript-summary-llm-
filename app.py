@@ -56,6 +56,10 @@ elif status.get("workers", 0) == 0:
 upload_tab, paste_tab = st.tabs(["Upload transcript", "Paste text"])
 with upload_tab:
     uploaded_file = st.file_uploader("Panopto transcript (.txt)", type=["txt"])
+    st.caption(
+        "Where to find it: open the recording in Canvas, go to the Captions tab in the Panopto viewer "
+        "and download the captions as a .txt file."
+    )
 with paste_tab:
     pasted_text = st.text_area("Transcript text", height=200)
 
@@ -145,7 +149,7 @@ if summary:
         mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     )
     st.download_button("Download .pdf", export.to_pdf(summary), file_name="summary.pdf", mime="application/pdf")
-    show_copy_button(summary.as_text(), "Copy summary")
+    show_copy_button(summary.as_text(), "Copy summary to clipboard")
 
 earlier = st.session_state.get("history", [])[1:]
 if earlier:
