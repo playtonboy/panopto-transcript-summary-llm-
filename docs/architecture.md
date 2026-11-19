@@ -29,20 +29,22 @@ Please don't rename these without telling the team, because the code depends on 
 | Interface | `POST /jobs` with `{"text", "title", "speakers", "detail_level", "language"}` | `201` `{"id": "..."}` |
 | Interface | `GET /jobs/{id}` | `{"id", "status", "progress", "message", "title", "body", "error"}`, or `404` |
 | Worker | `POST /jobs/next?worker=<name>` | `200` with the job, or `204` when the queue is empty |
-| Worker | `POST /jobs/{id}/progress` with `{"fraction", "message"}` | `200` |
-| Worker | `POST /jobs/{id}/result` with `{"title", "body"}` | `200` |
-| Worker | `POST /jobs/{id}/error` with `{"message"}` | `200` |
+| Worker | `POST /jobs/{id}/progress?worker=<name>` with `{"fraction", "message"}` | `200` |
+| Worker | `POST /jobs/{id}/alive?worker=<name>` every `HEARTBEAT_S` seconds while it works | `200` |
+| Worker | `POST /jobs/{id}/result?worker=<name>` with `{"title", "body"}` | `200` |
+| Worker | `POST /jobs/{id}/error?worker=<name>` with `{"message"}` | `200` |
 | Anyone | `GET /health` | `{"status": "ok", "workers": <workers seen in the last 10 s>}` |
 
-A job goes `queued` → `running` → `done` or `failed`.
+A job goes `queued` → `running` → `done` or `failed`. Updates from a worker whose job was already handed to another
+worker are ignored. Finished jobs are removed from memory `JOB_KEEP_S` seconds (10 minutes) after they finish.
 
 ## Why we chose this
 
 - **FastAPI with an in-memory SQLite queue:** easy to build and test, nothing extra to install, and transcripts are
   never written to disk (SCRUM-29).
 - **Workers ask for work:** the orchestrator doesn't need to know which workers exist, so adding one is trivial.
-- **Failures are always reported:** a job with no progress for `JOB_STALE_S` seconds is retried once, then marked as
-  failed. The interface checks `GET /health` first, so the student hears right away if nothing is running (SCRUM-53).
+- **Failures are always reported:** a busy worker says it is alive every `HEARTBEAT_S` seconds, even during one long
+  model call. A job without any sign of life for `JOB_STALE_S` seconds is retried once, then marked as failed. The interface checks `GET /health` first, so the student hears right away if nothing is running (SCRUM-53).
 
 
 ## Starting it

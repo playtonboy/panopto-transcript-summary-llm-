@@ -1,5 +1,6 @@
-import socket
 import argparse
+import socket
+import threading
 import time
 from typing import List, Optional
 
@@ -19,10 +20,22 @@ def run_one_job(name: str) -> bool:
     response.raise_for_status()
     job = response.json()
     url = f"{config.ORCHESTRATOR_URL}/jobs/{job['id']}"
+    mine = {"worker": name}
 
     def report_progress(message: str, fraction: float) -> None:
-        requests.post(f"{url}/progress", json={"fraction": fraction, "message": message}, timeout=10)
+        requests.post(f"{url}/progress", params=mine, json={"fraction": fraction, "message": message}, timeout=10)
 
+    # one model call can take minutes, so say "still busy" in between
+    finished = threading.Event()
+
+    def keep_alive() -> None:
+        while not finished.wait(config.HEARTBEAT_S):
+            try:
+                requests.post(f"{url}/alive", params=mine, timeout=10)
+            except requests.RequestException:
+                pass
+
+    threading.Thread(target=keep_alive, daemon=True).start()
     transcript = Transcript(text=job["text"], title=job["title"], speakers=job["speakers"])
     try:
         summary = summarize(
@@ -32,15 +45,18 @@ def run_one_job(name: str) -> bool:
             on_progress=report_progress,
         )
     except llm_client.LLMError as error:  # LM Studio down, too slow, ... : the message is meant for the student
-        requests.post(f"{url}/error", json={"message": str(error)}, timeout=10)
+        requests.post(f"{url}/error", params=mine, json={"message": str(error)}, timeout=10)
     except Exception:
         requests.post(
             f"{url}/error",
+            params=mine,
             json={"message": "An unexpected error occurred while generating the summary."},
             timeout=10,
         )
     else:
-        requests.post(f"{url}/result", json={"title": summary.title, "body": summary.body}, timeout=10)
+        requests.post(f"{url}/result", params=mine, json={"title": summary.title, "body": summary.body}, timeout=10)
+    finally:
+        finished.set()
     return True
 
 
@@ -68,6 +84,7 @@ def main() -> None:
         except requests.RequestException:
             print("Cannot reach the orchestrator, trying again in 5 seconds...")
             time.sleep(5)
+
 
 if __name__ == "__main__":
     main()

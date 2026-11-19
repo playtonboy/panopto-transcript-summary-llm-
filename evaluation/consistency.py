@@ -1,45 +1,74 @@
-"""Consistency check (SCRUM-33): summarizes the same lecture 5 times and compares the bullets.
+"""Consistency check: summarizes the same lecture several times and compares the points by meaning.
 
 Start LM Studio first, then run from the project folder:
-    python -m evaluation.consistency transcripts/secsai_l03_80min_en.txt
+    python -m evaluation.consistency transcripts/<lecture>.txt
 """
 
-import sys
-from difflib import SequenceMatcher
+import argparse
 from itertools import combinations
 from pathlib import Path
+from typing import Callable, List, Optional
 
 import config
 from evaluation.judge import summary_bullets
+from evaluation.matching import same_points
 from summarizer.summarize import summarize
 from summarizer.transcript import parse
 from summarizer.upload_validation import decode
 
 RUNS = 5
-SAME = 0.6  # two bullets count as "the same point" when their text is at least 60% alike
+
+# Pairs from our lecturer's feedback: a letter-based match got all three wrong.
+CHECK_PAIRS = [
+    ("The assignment is due Friday at noon.", "The assignment must be handed in by 12:00 on Friday.", True),
+    ("The exam is on Monday.", "The exam is on Tuesday.", False),
+    ("The assignment is due Friday at noon.", "The assignment is due Friday at 17:00.", False),
+]
+
+Matcher = Callable[[List[str], List[str]], List[Optional[bool]]]
 
 
-def overlap(a: list[str], b: list[str]) -> float:
-    """Share of the bullets in a that have a matching bullet in b (0.0 to 1.0)."""
+def overlap(a: List[str], b: List[str], same: Matcher) -> float:
+    """Share of the points in a that have a point with the same meaning in b (0.0 to 1.0)."""
     if not a:
         return 0.0
-    matches = sum(any(SequenceMatcher(None, x.lower(), y.lower()).ratio() >= SAME for y in b) for x in a)
-    return matches / len(a)
+    return sum(answer is True for answer in same(a, b)) / len(a)
+
+
+def check_matcher(same: Matcher) -> int:
+    """Run the known pairs through the matcher and print the result; returns how many it got right."""
+    right = 0
+    for first, second, expected in CHECK_PAIRS:
+        answer = same([first], [second])[0]
+        right += answer == expected
+        print(f"  {'ok  ' if answer == expected else 'WRONG'} same={answer}: '{first}' / '{second}'")
+    return right
 
 
 def main() -> None:
-    path = Path(sys.argv[1])
-    transcript = parse(decode(path.read_bytes()))
-    print(f"{path.name}, TEMPERATURE={config.TEMPERATURE}, detail level Medium")
+    """Summarize one lecture RUNS times and print the average overlap between the runs."""
+    parser = argparse.ArgumentParser()
+    parser.add_argument("transcript", type=Path)
+    parser.add_argument("--runs", type=int, default=RUNS)
+    parser.add_argument("--model", default=config.MODEL_NAME, help="model that decides if two points are the same")
+    args = parser.parse_args()
 
+    def same(a: List[str], b: List[str]) -> List[Optional[bool]]:
+        return same_points(a, b, args.model)
+
+    print("Checking the matcher on known pairs:")
+    print(f"{check_matcher(same)} of {len(CHECK_PAIRS)} right\n")
+
+    transcript = parse(decode(args.transcript.read_bytes()))
+    print(f"{args.transcript.name}, TEMPERATURE={config.TEMPERATURE}, detail level Medium")
     runs = []
-    for i in range(1, RUNS + 1):
-        print(f"Run {i} of {RUNS} ...")
+    for i in range(1, args.runs + 1):
+        print(f"Run {i} of {args.runs} ...")
         runs.append(summary_bullets(summarize(transcript, "Medium").body))
 
-    scores = [overlap(a, b) for a, b in combinations(runs, 2)]
-    print(f"\nAverage bullet overlap over {len(scores)} pairs: {sum(scores) / len(scores):.0%}")
-    print("Bullets per run:", [len(run) for run in runs])
+    scores = [overlap(a, b, same) for a, b in combinations(runs, 2)]
+    print(f"\nAverage overlap by meaning over {len(scores)} pairs: {sum(scores) / len(scores):.0%}")
+    print("Points per run:", [len(run) for run in runs])
     print("\nRun 1 for reference:")
     for bullet in runs[0]:
         print(" -", bullet)
