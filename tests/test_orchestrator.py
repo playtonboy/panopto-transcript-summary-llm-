@@ -1,6 +1,9 @@
+import time
+
 import pytest
 from fastapi.testclient import TestClient
 
+import config
 from orchestrator.main import app, db, workers_seen
 
 client = TestClient(app)
@@ -67,3 +70,40 @@ def test_transcript_is_deleted_once_the_job_is_finished():
     client.post(f"/jobs/{job_id}/error", json={"message": "LM Studio is not running."})
     assert client.get(f"/jobs/{job_id}").json()["error"] == "LM Studio is not running."
     assert db.execute("SELECT text FROM jobs WHERE id = ?", (job_id,)).fetchone()["text"] is None
+
+
+def test_a_busy_worker_keeps_its_job(monkeypatch):
+    job_id = new_job()
+    client.post("/jobs/next?worker=a")
+    start = time.time()
+    monkeypatch.setattr(time, "time", lambda: start + config.JOB_STALE_S - 10)
+    client.post(f"/jobs/{job_id}/alive?worker=a")
+    monkeypatch.setattr(time, "time", lambda: start + config.JOB_STALE_S + 20)
+    assert client.post("/jobs/next?worker=b").status_code == 204
+    assert client.get(f"/jobs/{job_id}").json()["status"] == "running"
+
+
+def test_a_late_result_from_the_old_worker_is_ignored(monkeypatch):
+    job_id = new_job()
+    client.post("/jobs/next?worker=a")
+    start = time.time()
+    monkeypatch.setattr(time, "time", lambda: start + config.JOB_STALE_S + 1)
+    assert client.post("/jobs/next?worker=b").json()["id"] == job_id
+
+    client.post(f"/jobs/{job_id}/result?worker=a", json={"title": "Old", "body": "- old"})
+    assert client.get(f"/jobs/{job_id}").json()["status"] == "running"
+    client.post(f"/jobs/{job_id}/result?worker=b", json={"title": "New", "body": "- new"})
+    assert client.get(f"/jobs/{job_id}").json()["body"] == "- new"
+
+
+def test_finished_jobs_are_removed_from_memory(monkeypatch):
+    job_id = new_job()
+    client.post("/jobs/next?worker=a")
+    client.post(f"/jobs/{job_id}/result?worker=a", json={"title": "Lecture 3", "body": "- point"})
+    assert client.get(f"/jobs/{job_id}").json()["status"] == "done"
+
+    start = time.time()
+    monkeypatch.setattr(time, "time", lambda: start + config.JOB_KEEP_S + 1)
+    client.post("/jobs/next?worker=a")
+    assert client.get(f"/jobs/{job_id}").status_code == 404
+    assert db.execute("SELECT COUNT(*) FROM jobs").fetchone()[0] == 0

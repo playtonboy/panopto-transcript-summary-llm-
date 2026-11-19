@@ -97,8 +97,10 @@ def make_summaries() -> list[dict]:
         transcript = parse(decode(path.read_bytes()))
         for level in config.DETAIL_LEVELS:
             print(f"Summarizing {path.name} ({level}) ...")
-            bullets = summary_bullets(summarize(transcript, level).body)
-            work.append({"lecture": path.stem, "level": level, "text": transcript.text, "bullets": bullets})
+            body = summarize(transcript, level).body  # the whole summary is kept for evaluation.key_points
+            work.append(
+                {"lecture": path.stem, "level": level, "text": transcript.text, "bullets": summary_bullets(body), "body": body}
+            )
     return work
 
 

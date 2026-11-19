@@ -28,3 +28,5 @@ WORKER_SEEN_S = 10    # a worker counts as running if it asked for work this rec
 JOB_STALE_S = REQUEST_TIMEOUT_S + 60
 JOB_MAX_ATTEMPTS = 2
 INTERFACE_TIMEOUT_S = 30 * 60
+HEARTBEAT_S = 30  # a busy worker tells the orchestrator it is still alive this often (seconds)
+JOB_KEEP_S = 10 * 60  # finished jobs are removed from memory after this long (seconds)

@@ -124,3 +124,55 @@ def test_history_keeps_only_the_last_five_summaries(monkeypatch):
         at.button[1].click().run()
     assert len(at.session_state["history"]) == 5
     assert "(4)" in at.expander[0].label
+
+
+class FakeUpload:
+    def __init__(self, name, data):
+        self.name, self.size, self._data = name, len(data), data
+
+    def getvalue(self):
+        return self._data
+
+
+def run_with_upload(monkeypatch, upload):
+    import streamlit
+
+    sent = []
+    monkeypatch.setattr(client, "health", lambda url=None: {"status": "ok", "workers": 1})
+    monkeypatch.setattr(client, "submit", lambda transcript, **options: sent.append(transcript) or "job-1")
+    monkeypatch.setattr(streamlit, "file_uploader", lambda *args, **kwargs: upload)
+    at = AppTest.from_file("../app.py", default_timeout=30)
+    at.run()
+    at.button[0].click().run()
+    return at, sent
+
+
+def test_a_wrong_file_type_is_shown_to_the_user(monkeypatch):
+    at, sent = run_with_upload(monkeypatch, FakeUpload("slides.pptx", b"not a transcript"))
+    assert not at.exception
+    assert "Unsupported file type" in at.error[0].value
+    assert sent == []
+
+
+def test_a_pdf_renamed_to_txt_is_shown_to_the_user(monkeypatch):
+    at, sent = run_with_upload(monkeypatch, FakeUpload("lecture.txt", b"%PDF-1.7 binary"))
+    assert "appears to be a PDF" in at.error[0].value
+    assert sent == []
+
+
+def test_an_empty_file_is_shown_to_the_user(monkeypatch):
+    at, sent = run_with_upload(monkeypatch, FakeUpload("lecture.txt", b""))
+    assert "empty" in at.error[0].value
+    assert sent == []
+
+
+def test_a_too_short_transcript_is_shown_to_the_user(monkeypatch):
+    at, sent = run_with_upload(monkeypatch, FakeUpload("lecture.txt", b"Hello everyone."))
+    assert at.error[0].value.startswith("Transcript too short")
+    assert sent == []
+
+
+def test_generate_without_a_transcript_asks_for_one(monkeypatch):
+    at, sent = run_with_upload(monkeypatch, None)
+    assert at.error[0].value == "Please upload a transcript or paste its text first."
+    assert sent == []
