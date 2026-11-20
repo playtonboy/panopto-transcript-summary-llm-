@@ -1,8 +1,12 @@
 [server]
 maxUploadSize = 5
-# SCRUM-29: only this computer can open the app (others on the same Wi-Fi cannot).
+# Only this computer can open the app (others on the same Wi-Fi cannot).
 address = "localhost"
 
 [browser]
-# SCRUM-29 / NFR10: do not send usage statistics to Streamlit's servers.
+# Do not send usage statistics to Streamlit's servers.
 gatherUsageStats = false
+
+[client]
+# Hide the "Deploy" button: it offers to put the app on Streamlit's cloud, which this local app must not use.
+toolbarMode = "viewer"
