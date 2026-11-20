@@ -16,7 +16,7 @@ Course project of Group 4 (Ege, Burak, Siem, Frida, Platon), Software Engineerin
 | Download as .txt, .docx or .pdf, or copy with one click; AI disclaimer on every output | `summarizer/export.py` |
 | Regenerate with other settings; the last 5 summaries of this session stay visible | `app.py` |
 | Interface, orchestrator and AI workers as separate services | `app.py`, `orchestrator/`, `worker/`, see [docs/architecture.md](docs/architecture.md) |
-| Evaluation: LLM-as-judge, consistency, key points and timing | `evaluation/` |
+| Evaluation: LLM-as-judge, consistency, key points and timing (see [Reproducing the evaluation](#reproducing-the-evaluation)) | `evaluation/` |
 
 ## Install
 
@@ -79,7 +79,46 @@ No LM Studio is needed: the tests use a fake LM Studio server. GitHub Actions ru
 | `pytest: command not found` | Use `python -m pytest` with the virtual environment active |
 | Summary takes very long | Normal for a 2 h lecture on a laptop without a GPU. Use Short, or close other programs |
 
-## Privacy (SCRUM-29: NFR3, NFR4, NFR10)
+## Reproducing the evaluation
+
+The scripts in `evaluation/` are developer tools, not part of the app. They need:
+
+- Lecture transcripts as `.txt` files in `transcripts/` (git-ignored; download the captions from Panopto). The file name without `.txt` is the lecture's name in the results.
+- LM Studio with `qwen2.5-7b-instruct` (the summarizer, context length 16384) and `meta-llama-3.1-8b-instruct` (the judge) downloaded. The judge script swaps the models with `lms`; without `lms` it asks you to swap them by hand.
+
+Run from the project folder with the virtual environment active:
+
+```
+# 1. Summarize every lecture and let the judge score each bullet (also saves evaluation/summaries.json)
+python -m evaluation.judge --judge-model meta-llama-3.1-8b-instruct --fresh --out evaluation/after.csv
+
+# 2. Turn the scores into a Markdown table (--before is optional: a CSV from an older version)
+python -m evaluation.report evaluation/after.csv --before evaluation/before.csv
+
+# 3. Key point recall: needs evaluation/key_points.json (see below) and the summaries from step 1
+python -m evaluation.key_points
+
+# 4. Consistency: summarizes one lecture several times and compares the points by meaning
+python -m evaluation.consistency transcripts/<lecture>.txt --runs 5
+
+# 5. Speed: times one Medium summary per lecture, "OK" if under 120 s
+python -m evaluation.timing
+```
+
+Write `evaluation/key_points.json` by hand, with short facts that a good summary must keep:
+
+```json
+{
+  "lecture_03": [
+    "Assignment 2 is due Friday 20 Nov at 12:00",
+    "Scrum uses sprints of two weeks"
+  ]
+}
+```
+
+Results differ a little between runs because the summarizer uses temperature 0.2; the judge uses temperature 0, so scoring the same summaries again gives the same scores. All results (`evaluation/*.csv`, `evaluation/*.json`) are git-ignored and stay on your computer.
+
+## Privacy
 
 The app runs only on your own computer. Transcripts and summaries are never written to disk and never sent to the internet.
 
