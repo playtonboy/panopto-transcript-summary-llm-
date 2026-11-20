@@ -1,5 +1,6 @@
 import html
 
+import streamlit as st
 import streamlit.components.v1 as components
 
 
@@ -27,4 +28,8 @@ document.getElementById("copy-btn").addEventListener("click", async () => {{
 
 def show_copy_button(text: str, label: str = "Copy summary") -> None:
     """Show the copy button in the Streamlit app."""
-    components.html(copy_button_html(text, label), height=50)
+    button = copy_button_html(text, label)
+    if hasattr(st, "iframe"):  # newer Streamlit: components.html is deprecated and will be removed
+        st.iframe(button, height=50)
+    else:
+        components.html(button, height=50)
