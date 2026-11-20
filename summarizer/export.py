@@ -1,4 +1,4 @@
-"""Exports a summary as .txt, .docx or .pdf (FR4, UR8, NFR7). Files are built in memory only, never saved (NFR3)."""
+"""Exports a summary as .txt, .docx or .pdf. Files are built in memory only, never saved (NFR3)."""
 
 import io
 
@@ -9,10 +9,12 @@ import config
 
 
 def to_txt(summary) -> bytes:
+    """The summary as a .txt file, as bytes."""
     return summary.as_text().encode("utf-8")
 
 
 def to_docx(summary) -> bytes:
+    """The summary as a Word file, as bytes."""
     doc = Document()
     doc.add_heading(summary.title, level=1)
     for line in summary.body.splitlines():
@@ -25,7 +27,7 @@ def to_docx(summary) -> bytes:
             doc.add_paragraph(text[2:], style="List Bullet")
         else:
             doc.add_paragraph(text)
-    doc.add_paragraph().add_run(config.AI_DISCLAIMER).italic = True  # NFR12
+    doc.add_paragraph().add_run(config.AI_DISCLAIMER).italic = True
 
     buffer = io.BytesIO()
     doc.save(buffer)

@@ -1,3 +1,5 @@
+"""Streamlit interface: upload or paste a transcript, generate a summary, export it."""
+
 from dataclasses import replace
 from pathlib import Path
 
@@ -52,7 +54,7 @@ elif status.get("workers", 0) == 0:
         "Your summary will wait until a worker becomes available."
     )
     
-# Input: upload (SCRUM-46) or paste (SCRUM-35)
+# Input: upload or paste
 upload_tab, paste_tab = st.tabs(["Upload transcript", "Paste text"])
 with upload_tab:
     uploaded_file = st.file_uploader("Panopto transcript (.txt)", type=["txt"])
@@ -63,7 +65,7 @@ with upload_tab:
 with paste_tab:
     pasted_text = st.text_area("Transcript text", height=200)
 
-# Options (SCRUM-23 will turn this into the final detail-level selector)
+# Options
 detail = st.radio(
     "Detail level",
     list(config.DETAIL_LEVELS),
@@ -78,7 +80,7 @@ language = st.selectbox(
     index=config.OUTPUT_LANGUAGES.index(config.DEFAULT_OUTPUT_LANGUAGE),
 )
 
-# Custom title (FR17). Empty -> the uploaded file's name without .txt.
+# Custom title. Empty -> the uploaded file's name without .txt.
 custom_title = st.text_input("Summary title (optional)", placeholder="Leave empty to use the file name")
 
 HISTORY_SIZE = 5
@@ -140,7 +142,7 @@ if summary:
     st.divider()
     st.subheader(summary.title)
     st.markdown(summary.body)
-    st.caption(config.AI_DISCLAIMER)  # NFR12
+    st.caption(config.AI_DISCLAIMER)
     st.download_button("Download .txt", export.to_txt(summary), file_name="summary.txt", mime="text/plain")
     st.download_button(
         "Download .docx",

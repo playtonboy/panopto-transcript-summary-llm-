@@ -1,3 +1,5 @@
+"""Checks uploaded files (type, size, encoding) before they are parsed."""
+
 import config
 from summarizer.transcript import TranscriptError
 
@@ -9,13 +11,13 @@ def validate_upload(filename: str, size_bytes: int) -> None:
             "Unsupported file type. Please upload a .txt transcript."
         )
 
-    #reject empty files
+    # Reject empty files
     if size_bytes == 0:
         raise TranscriptError(
             "The uploaded file is empty."
         )
 
-    #reject files larger than the allowed limit
+    # Reject files larger than the allowed limit
     if size_bytes > config.MAX_UPLOAD_MB * 1024 * 1024:
         raise TranscriptError(
             f"The file is larger than {config.MAX_UPLOAD_MB} MB."

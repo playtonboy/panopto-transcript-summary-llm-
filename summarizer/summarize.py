@@ -1,4 +1,4 @@
-"""Turns a cleaned transcript into a structured summary (FR7, FR14, FR18, UR4, UR5)."""
+"""Turns a cleaned transcript into a structured summary."""
 
 import re
 from collections.abc import Callable
@@ -14,7 +14,7 @@ SYSTEM_PROMPT = (
     "Ignore filler speech, greetings and small talk unless it contains deadlines or tasks."
 )
 
-# Added to the system prompt: read any language (SCRUM-30), answer in the chosen one (SCRUM-43).
+# Added to the system prompt: read any language, answer in the chosen one.
 LANGUAGE_HINT = (
     " The transcript can be in any language, for example Dutch or English, or a mix of both."
     " Always write your answer in {language}. Keep technical and academic terms that have no common "
@@ -34,7 +34,7 @@ CHUNK_PROMPT = (
     "TRANSCRIPT PART:\n{chunk}"
 )
 
-# SCRUM-18: without limits the model listed 22 "topics", including the recap quiz and group forming.
+# Without limits the model listed 22 "topics", including the recap quiz and group forming.
 TOPICS_PROMPT = (
     "List the main topics of the lecture below as a short Markdown bullet list: between 3 and 7 topics, "
     "one '- ' line per topic, 2 to 6 words each, in lecture order. A topic is a subject that is taught "
@@ -47,7 +47,7 @@ MAX_TOPICS = 8  # safety net in case the model still lists too many
 
 # Small models follow a count far better when they number the lines, so we ask for 1..N
 # and turn the numbers into bullets afterwards.
-# SCRUM-18: points used to pile up at the start of the lecture (e.g. the recap quiz) and miss the
+# Points used to pile up at the start of the lecture (e.g. the recap quiz) and miss the
 # middle, so we name the topics and ask for the points to be spread over the whole lecture.
 SUMMARY_PROMPT = (
     "Write the key insights of the lecture below as a numbered list with exactly {bullets} points, "
@@ -70,7 +70,7 @@ FIX_COUNT_PROMPT = (
     "LECTURE:\n{material}"
 )
 
-# SCRUM-18: the model used to turn lecture content ("systems need monitoring", "costs change") into
+# The model used to turn lecture content ("systems need monitoring", "costs change") into
 # action items, so we say exactly who the tasks are for and what does not count.
 ACTION_ITEMS_PROMPT = (
     "Find everything in the lecture below that the students of this course are asked to do themselves. "
@@ -102,11 +102,12 @@ BULLET_LINE = re.compile(r"^\s*[-*•]\s+(.*\S)")
 
 @dataclass
 class Summary:
+    """A finished summary: title and Markdown body."""
     title: str
     body: str
 
     def as_text(self) -> str:
-        return "\n".join([self.title, "", self.body, "", config.AI_DISCLAIMER])  # NFR12
+        return "\n".join([self.title, "", self.body, "", config.AI_DISCLAIMER])
 
 
 def _list_items(text: str, pattern: re.Pattern) -> list[str]:
@@ -150,6 +151,7 @@ def summarize(
     on_progress: Callable[[str, float], None] = lambda message, fraction: None,
     language: str = config.DEFAULT_OUTPUT_LANGUAGE,
 ) -> Summary:
+    """Summarize a transcript: notes per part for long lectures, then topics, key points and action items."""
     if detail_level not in config.DETAIL_LEVELS:
         detail_level = config.DEFAULT_DETAIL_LEVEL
     if language not in config.OUTPUT_LANGUAGES:

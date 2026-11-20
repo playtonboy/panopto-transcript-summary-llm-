@@ -1,4 +1,4 @@
-"""Speed check (SCRUM-44): times one summary per transcript in transcripts/.
+"""Speed check: times one summary per transcript in transcripts/.
 
     python -m evaluation.timing
 """

@@ -1,3 +1,5 @@
+"""AI worker: takes jobs from the orchestrator and summarizes them with LM Studio."""
+
 import argparse
 import socket
 import threading
@@ -61,7 +63,7 @@ def run_one_job(name: str) -> bool:
 
 
 def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
-    """Read the worker's name and settings from the command line (SCRUM-56)."""
+    """Read the worker's name and settings from the command line."""
     parser = argparse.ArgumentParser(description="AI worker: summarizes jobs from the orchestrator with LM Studio.")
     parser.add_argument("name", nargs="?", default=f"{socket.gethostname()}-{time.time_ns() % 10000}")
     parser.add_argument("--model", default=config.MODEL_NAME, help="LM Studio API id of the model to use")
@@ -70,6 +72,7 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
 
 
 def main() -> None:
+    """Ask for jobs until stopped and summarize each one."""
     args = parse_args()
     config.MODEL_NAME, config.LMSTUDIO_BASE_URL = args.model, args.lmstudio_url
     print(f"Worker {args.name} uses model '{config.MODEL_NAME}' at {config.LMSTUDIO_BASE_URL}")
