@@ -8,5 +8,5 @@ address = "localhost"
 gatherUsageStats = false
 
 [client]
-# SCRUM-13: hide the "Deploy" button (it offers to put the app on Streamlit's cloud, which this local app must not use).
+# Hide the "Deploy" button: it offers to put the app on Streamlit's cloud, which this local app must not use.
 toolbarMode = "viewer"

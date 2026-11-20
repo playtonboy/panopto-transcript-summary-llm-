@@ -1,4 +1,4 @@
-"""The copy button (UR7) escapes the summary and uses st.iframe, because components.html is deprecated (SCRUM-13)."""
+"""The copy button escapes the summary and uses st.iframe, because components.html is deprecated."""
 
 import streamlit
 import streamlit.components.v1 as components
