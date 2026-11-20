@@ -1,13 +1,17 @@
+"""Splits long transcripts into overlapping parts that fit the model's context."""
+
 import config
 
 SENTENCE_ENDS = (". ", "? ", "! ", "\n")
 
 
 def estimate_tokens(text: str) -> int:
+    """Rough token count, about 4 characters per token."""
     return len(text) // config.CHARS_PER_TOKEN + 1
 
 
 def split_into_chunks(text: str) -> list[str]:
+    """Split the text into parts of at most CHUNK_TOKENS, ending at a sentence where possible."""
     max_chars = config.CHUNK_TOKENS * config.CHARS_PER_TOKEN
     overlap_chars = config.CHUNK_OVERLAP_TOKENS * config.CHARS_PER_TOKEN
 

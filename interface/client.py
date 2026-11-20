@@ -1,4 +1,4 @@
-"""How the Streamlit interface talks to the orchestrator (Task 6, SCRUM-52).
+"""How the Streamlit interface talks to the orchestrator.
 
 The interface only sends jobs and reads their status. It never calls LM Studio or summarize() itself.
 """
@@ -25,6 +25,7 @@ class JobFailed(RuntimeError):
 
 
 def is_local(url: str) -> bool:
+    """True if the address points to this computer (localhost)."""
     return (
         urlparse(url).scheme == "http"
         and urlparse(url).hostname in ("localhost", "127.0.0.1")
@@ -36,6 +37,7 @@ def _base(url: Optional[str]) -> str:
 
 
 def is_running(url: Optional[str] = None) -> bool:
+    """This function checks whether a server or API is running and responding to health checks."""
     try:
         return requests.get(f"{_base(url)}/health", timeout=3).ok
     except requests.RequestException:

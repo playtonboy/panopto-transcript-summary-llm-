@@ -1,4 +1,4 @@
-# All settings in one place.
+"""All settings of the app in one place."""
 LMSTUDIO_BASE_URL = "http://localhost:1234/v1"
 MODEL_NAME = "qwen2.5-7b-instruct"  # the API id LM Studio shows for the loaded model
 TEMPERATURE = 0.2

@@ -1,3 +1,5 @@
+"""Orchestrator: keeps the job queue in memory and gives each job to one worker."""
+
 import json
 import sqlite3
 import threading
@@ -12,7 +14,7 @@ import config
 
 app = FastAPI(title="Lecture summarizer orchestrator")
 
-# The queue lives in memory only, so transcripts are never written to disk (privacy, SCRUM-29).
+# The queue lives in memory only, so transcripts are never written to disk.
 db = sqlite3.connect(":memory:", check_same_thread=False)
 db.row_factory = sqlite3.Row
 lock = threading.Lock()  # one request at a time touches the table
@@ -33,6 +35,7 @@ db.execute(
 
 
 class JobRequest(BaseModel):
+    """A summary request from the interface."""
     text: str
     title: str = ""
     speakers: List[str] = []
@@ -41,16 +44,19 @@ class JobRequest(BaseModel):
 
 
 class Progress(BaseModel):
+    """A progress update from a worker."""
     fraction: float
     message: str
 
 
 class Result(BaseModel):
+    """A finished summary from a worker."""
     title: str
     body: str
 
 
 class Failure(BaseModel):
+    """An error message from a worker."""
     message: str
 
 
@@ -98,12 +104,14 @@ def _is_current_worker(row: sqlite3.Row, worker: str) -> bool:
 
 @app.get("/health")
 def health():
+    """How many workers asked for work in the last WORKER_SEEN_S seconds."""
     recent = time.time() - config.WORKER_SEEN_S
     return {"status": "ok", "workers": sum(seen > recent for seen in workers_seen.values())}
 
 
 @app.post("/jobs", status_code=201)
 def create_job(job: JobRequest):
+    """Queue a new job and return its id."""
     job_id = uuid.uuid4().hex
     now = time.time()
     with lock:
@@ -117,6 +125,7 @@ def create_job(job: JobRequest):
 
 @app.get("/jobs/{job_id}")
 def get_job(job_id: str):
+    """Status, progress and result of one job."""
     with lock:
         _requeue_stale_jobs()
         row = _get(job_id)
@@ -167,6 +176,7 @@ def report_alive(job_id: str, worker: str = ""):
 
 @app.post("/jobs/{job_id}/progress")
 def report_progress(job_id: str, progress: Progress, worker: str = ""):
+    """A worker reports how far it is."""
     with lock:
         if not _is_current_worker(_get(job_id), worker):
             return {"ok": False}
@@ -179,6 +189,7 @@ def report_progress(job_id: str, progress: Progress, worker: str = ""):
 
 @app.post("/jobs/{job_id}/result")
 def report_result(job_id: str, result: Result, worker: str = ""):
+    """A worker delivers the summary; the transcript is deleted."""
     with lock:
         if not _is_current_worker(_get(job_id), worker):
             return {"ok": False}
@@ -193,6 +204,7 @@ def report_result(job_id: str, result: Result, worker: str = ""):
 
 @app.post("/jobs/{job_id}/error")
 def report_error(job_id: str, failure: Failure, worker: str = ""):
+    """A worker reports a failure; the transcript is deleted."""
     with lock:
         if not _is_current_worker(_get(job_id), worker):
             return {"ok": False}

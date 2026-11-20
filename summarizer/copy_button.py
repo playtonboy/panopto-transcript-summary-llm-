@@ -1,10 +1,12 @@
+"""A "Copy summary" button for the Streamlit page."""
+
 import html
 
 import streamlit.components.v1 as components
 
 
 def copy_button_html(text: str, label: str = "Copy summary") -> str:
-    """Return a small HTML button that copies `text` to the clipboard (UR7)."""
+    """Return a small HTML button that copies `text` to the clipboard."""
     safe_text = html.escape(text)
     safe_label = html.escape(label)
     return f"""
