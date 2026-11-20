@@ -1,18 +1,21 @@
+"""Reads a Panopto transcript: removes timestamps and line numbers, finds the title and speakers."""
+
 from dataclasses import dataclass, field
 import re
 import config
 
-@dataclass #store transcript information
+@dataclass
 class Transcript:
-    text: str #stores cleaned lecture script
+    """A cleaned transcript with its title and speakers."""
+    text: str
     title: str = ""
-    speakers: list[str] = field(default_factory=list) #stores a list of people speaking
+    speakers: list[str] = field(default_factory=list)
 
     @property
-    def word_count(self) -> int: #counts how many words are in the script
+    def word_count(self) -> int:
         return len(self.text.split())
 
-#patterns for identifying transcript information
+# Patterns for identifying transcript information
 
 TIMESTAMP_PATTERN = re.compile(
     r"^\s*\d{1,2}:\d{2}(:\d{2})?([.,]\d+)?\s*(-->.*)?$"
@@ -26,16 +29,18 @@ SPEAKER_PATTERN = re.compile(
     r"^((?:Speaker \d+)|(?:[A-Z][\w.'-]*(?: [A-Z][\w.'-]*){0,2})):\s*(.+)$"
 )
 
-class TranscriptError(Exception): #this is custom error for transcripts that fail validation (if script is too short)
+class TranscriptError(Exception): 
+    """A transcript that cannot be used; its message is shown to the user."""
     pass
 
-def parse(raw_text: str) -> Transcript: #returns original transcript as object
-    title = "" #store information that is found
+def parse(raw_text: str) -> Transcript:
+    """Clean a raw transcript and return it as a Transcript."""
+    title = ""
     speakers = []
-    cleaned_lines = [] #list to collect actual spoken words
+    cleaned_lines = []
 
     for line in raw_text.splitlines():
-        line = line.strip() #remove extra spaces from begin and end
+        line = line.strip()
 
         if not line:
             continue
@@ -46,13 +51,13 @@ def parse(raw_text: str) -> Transcript: #returns original transcript as object
         if NUMBER_PATTERN.match(line):
             continue
 
-        #find the lecture title
+        # Find the lecture title
         title_match=TITLE_PATTERN.match(line)
         if title_match:
             title=title_match.group(1)
             continue
 
-        #find speaker names
+        # Find speaker names
         speaker=None
         speaker_match = SPEAKER_PATTERN.match(line)
         if speaker_match:
@@ -89,7 +94,7 @@ def parse(raw_text: str) -> Transcript: #returns original transcript as object
         speakers=speakers
     )
 
-    #reject transcripts that are too short to summarize
+    # Reject transcripts that are too short to summarize
     if transcript.word_count < config.MIN_TRANSCRIPT_WORDS:
         raise TranscriptError(
             f"Transcript too short ({transcript.word_count} words)."

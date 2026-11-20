@@ -1,12 +1,10 @@
-"""AI worker (Task 6, SCRUM-51): takes jobs from the orchestrator and summarizes them with LM Studio.
+"""AI worker: takes jobs from the orchestrator and summarizes them with LM Studio."""
 
-Run with:  python -m worker.main
-Start it in a second terminal to get a second worker: two lectures are then summarized at the same time.
-"""
-
+import argparse
 import socket
-import sys
+import threading
 import time
+from typing import List, Optional
 
 import requests
 
@@ -24,10 +22,22 @@ def run_one_job(name: str) -> bool:
     response.raise_for_status()
     job = response.json()
     url = f"{config.ORCHESTRATOR_URL}/jobs/{job['id']}"
+    mine = {"worker": name}
 
     def report_progress(message: str, fraction: float) -> None:
-        requests.post(f"{url}/progress", json={"fraction": fraction, "message": message}, timeout=10)
+        requests.post(f"{url}/progress", params=mine, json={"fraction": fraction, "message": message}, timeout=10)
 
+    # one model call can take minutes, so say "still busy" in between
+    finished = threading.Event()
+
+    def keep_alive() -> None:
+        while not finished.wait(config.HEARTBEAT_S):
+            try:
+                requests.post(f"{url}/alive", params=mine, timeout=10)
+            except requests.RequestException:
+                pass
+
+    threading.Thread(target=keep_alive, daemon=True).start()
     transcript = Transcript(text=job["text"], title=job["title"], speakers=job["speakers"])
     try:
         summary = summarize(
@@ -37,27 +47,45 @@ def run_one_job(name: str) -> bool:
             on_progress=report_progress,
         )
     except llm_client.LLMError as error:  # LM Studio down, too slow, ... : the message is meant for the student
-        requests.post(f"{url}/error", json={"message": str(error)}, timeout=10)
+        requests.post(f"{url}/error", params=mine, json={"message": str(error)}, timeout=10)
     except Exception:
         requests.post(
             f"{url}/error",
+            params=mine,
             json={"message": "An unexpected error occurred while generating the summary."},
             timeout=10,
         )
     else:
-        requests.post(f"{url}/result", json={"title": summary.title, "body": summary.body}, timeout=10)
+        requests.post(f"{url}/result", params=mine, json={"title": summary.title, "body": summary.body}, timeout=10)
+    finally:
+        finished.set()
     return True
 
 
+def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
+    """Read the worker's name and settings from the command line."""
+    parser = argparse.ArgumentParser(description="AI worker: summarizes jobs from the orchestrator with LM Studio.")
+    parser.add_argument("name", nargs="?", default=f"{socket.gethostname()}-{time.time_ns() % 10000}")
+    parser.add_argument("--model", default=config.MODEL_NAME, help="LM Studio API id of the model to use")
+    parser.add_argument("--lmstudio-url", default=config.LMSTUDIO_BASE_URL, help="LM Studio server address")
+    return parser.parse_args(argv)
+
+
 def main() -> None:
-    name = sys.argv[1] if len(sys.argv) > 1 else f"{socket.gethostname()}-{time.time_ns() % 10000}"
-    print(f"Worker {name} is waiting for jobs from {config.ORCHESTRATOR_URL} (stop with Ctrl+C)")
+    """Ask for jobs until stopped and summarize each one."""
+    args = parse_args()
+    config.MODEL_NAME, config.LMSTUDIO_BASE_URL = args.model, args.lmstudio_url
+    print(f"Worker {args.name} uses model '{config.MODEL_NAME}' at {config.LMSTUDIO_BASE_URL}")
+    warning = llm_client.model_warning()
+    if warning:
+        print("Warning: " + warning)
+    print(f"Waiting for jobs from {config.ORCHESTRATOR_URL} (stop with Ctrl+C)")
     while True:
         try:
-            if not run_one_job(name):
+            if not run_one_job(args.name):
                 time.sleep(config.WORKER_POLL_S)
         except requests.RequestException:
-            print("Cannot reach the orchestrator. Retrying in 5 seconds...")
+            print("Cannot reach the orchestrator, trying again in 5 seconds...")
             time.sleep(5)
 
 

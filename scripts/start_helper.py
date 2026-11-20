@@ -1,4 +1,4 @@
-"""Small helper for start.sh / start.bat (SCRUM-14). Works on Python 3.8+ and uses only the standard library.
+"""Small helper for start.sh / start.bat. Works on Python 3.8+ and uses only the standard library.
 
     python scripts/start_helper.py deps-changed          exit 0 if requirements.txt changed since the last install
     python scripts/start_helper.py deps-saved            remember the current requirements.txt as installed
@@ -23,10 +23,12 @@ import config  # noqa: E402
 
 
 def requirements_hash() -> str:
+    """Calculate and return the SHA-256 hash of the requirements.txt file."""
     return hashlib.sha256((ROOT / "requirements.txt").read_bytes()).hexdigest()
 
 
 def is_up(url: str) -> bool:
+    """Check whether the given URL is reachable and returns a response below HTTP 500."""
     try:
         with urllib.request.urlopen(url, timeout=2) as response:
             return response.status < 500
@@ -35,6 +37,7 @@ def is_up(url: str) -> bool:
 
 
 def wait_until_up(url: str, seconds: float) -> bool:
+    """Wait until the given URL becomes available or the specified timeout expires."""
     deadline = time.time() + seconds
     while time.time() < deadline:
         if is_up(url):
@@ -44,6 +47,7 @@ def wait_until_up(url: str, seconds: float) -> bool:
 
 
 def main(args) -> int:
+    """Execute the requested command and return an exit code indicating its result."""
     command = args[0] if args else ""
     if command == "deps-changed":
         return 0 if not STAMP.exists() or STAMP.read_text().strip() != requirements_hash() else 1

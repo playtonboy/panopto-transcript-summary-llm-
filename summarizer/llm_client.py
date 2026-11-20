@@ -1,15 +1,16 @@
-"""Talks to the LM Studio local server. Everything stays on localhost (NFR4, NFR10)."""
+"""Talks to the LM Studio local server. Everything stays on localhost."""
 
 import requests
-
+from typing import List, Optional
 import config
 
 
 class LLMError(RuntimeError):
-    """Error whose message is shown to the user (UR11)."""
+    """Error whose message is shown to the user."""
 
 
 def chat(system_prompt: str, user_prompt: str) -> str:
+    """Send one prompt to LM Studio and return the answer text."""
     payload = {
         "model": config.MODEL_NAME,
         "messages": [
@@ -39,7 +40,29 @@ def chat(system_prompt: str, user_prompt: str) -> str:
 
 
 def is_server_running() -> bool:
+    """True if LM Studio's local server answers."""
     try:
         return requests.get(f"{config.LMSTUDIO_BASE_URL}/models", timeout=3).ok
     except requests.RequestException:
         return False
+
+def loaded_models() -> List[str]:
+    """The ids of the models LM Studio has loaded."""
+    try:
+        response = requests.get(f"{config.LMSTUDIO_BASE_URL}/models", timeout=3)
+        return [model["id"] for model in response.json()["data"]] if response.ok else []
+    except (requests.RequestException, KeyError, TypeError, ValueError):
+        return []
+
+
+def model_warning() -> Optional[str]:
+    """A warning text when MODEL_NAME is not loaded in LM Studio, otherwise None."""
+    models = loaded_models()
+    if not models:
+        return "LM Studio is not reachable. Open LM Studio, load a model and start the local server."
+    if config.MODEL_NAME not in models:
+        return (
+            f"config.MODEL_NAME is '{config.MODEL_NAME}', but LM Studio has loaded: {', '.join(models)}. "
+            "Load that model, or start the worker with --model <id> using one of these ids."
+        )
+    return None

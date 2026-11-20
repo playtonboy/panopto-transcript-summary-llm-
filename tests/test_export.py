@@ -6,7 +6,7 @@ from docx import Document
 
 import config 
 
-from summarizer.export import to_docx, to_txt
+from summarizer.export import to_docx, to_txt, to_pdf
 from summarizer.summarize import Summary
 
 SUMMARY = Summary(
@@ -51,3 +51,20 @@ def test_custom_title_is_used_in_both_exports():
     summary = Summary(title="My own title", body="- point")
     assert to_txt(summary).decode("utf-8").startswith("My own title")
     assert Document(io.BytesIO(to_docx(summary))).paragraphs[0].text == "My own title"
+
+def test_to_pdf_is_a_real_pdf_with_title_bullets_and_disclaimer():
+    data = to_pdf(SUMMARY)
+    assert data.startswith(b"%PDF")
+    assert b"Lecture 3" in data
+    assert b"Unit testing" in data
+    assert b"pytest basics" in data
+    assert config.AI_DISCLAIMER.split(".")[0].encode("latin-1") in data
+
+
+def test_to_pdf_survives_characters_the_built_in_font_does_not_have():
+    odd = Summary(
+        title="Vorlesung über Größe", body="- “Quoted” — done \U0001f600\n- café"
+    )
+    data = to_pdf(odd)
+    assert data.startswith(b"%PDF")
+    assert "Vorlesung über".encode("latin-1") in data

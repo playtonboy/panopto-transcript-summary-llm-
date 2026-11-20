@@ -1,3 +1,5 @@
+"""LLM-as-judge: summarizes every lecture in transcripts/ and lets a judge model score each bullet."""
+
 import argparse
 import csv
 import json
@@ -40,6 +42,7 @@ def summary_bullets(body: str) -> list[str]:
 
 
 def clamp(score: int) -> int:
+    """Keep a score between -1 and 1."""
     return max(-1, min(1, score))
 
 
@@ -92,17 +95,21 @@ def swap_models(judge_model: str) -> None:
 
 
 def make_summaries() -> list[dict]:
+    """Summarize every transcript in transcripts/ at every detail level."""
     work = []
     for path in sorted(Path("transcripts").glob("*.txt")):
         transcript = parse(decode(path.read_bytes()))
         for level in config.DETAIL_LEVELS:
             print(f"Summarizing {path.name} ({level}) ...")
-            bullets = summary_bullets(summarize(transcript, level).body)
-            work.append({"lecture": path.stem, "level": level, "text": transcript.text, "bullets": bullets})
+            body = summarize(transcript, level).body  # the whole summary is kept for evaluation.key_points
+            work.append(
+                {"lecture": path.stem, "level": level, "text": transcript.text, "bullets": summary_bullets(body), "body": body}
+            )
     return work
 
 
 def main() -> None:
+    """Make or load the summaries, let the judge score them and write the CSV."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--judge-model", required=True, help="the judge model's id as shown in LM Studio")
     parser.add_argument("--out", default="evaluation/judge_scores.csv")
